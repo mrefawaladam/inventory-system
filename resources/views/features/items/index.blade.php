@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'User Management')
+@section('title', 'Manajemen Barang')
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css') }}" />
@@ -78,8 +78,8 @@
 
 @section('content')
 <x-layout.page-header
-    title="User Management"
-    :breadcrumb-title="'User Management'"
+    title="Manajemen Barang"
+    :breadcrumb-title="'Manajemen Barang'"
 />
 
 <!-- Toast Notification -->
@@ -91,25 +91,30 @@
         <div class="card-body">
             <div class="d-flex justify-content-between align-items-start mb-3">
                 <div>
-                    <h4 class="card-title">Users</h4>
+                    <h4 class="card-title">Daftar Barang</h4>
                     <p class="card-subtitle mb-3">
-                        Manage your users and their roles. You can create, edit, and delete users from this page.
+                        Kelola data barang (SKU, Barcode, Gambar). Anda dapat membuat, mengedit, dan menghapus barang dari halaman ini.
                     </p>
                 </div>
-                <button type="button" class="btn btn-primary" id="btn-create-user">
-                    <i class="ti ti-plus me-1"></i> Add New User
+                <button type="button" class="btn btn-primary" id="btn-create-item">
+                    <i class="ti ti-plus me-1"></i> Tambah Barang Baru
                 </button>
             </div>
             <div class="table-responsive" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
-                <table id="users-table" class="table table-striped table-bordered text-nowrap align-middle" style="width: 100%; min-width: 800px;">
+                <table id="items-table" class="table table-striped table-bordered align-middle" style="width: 100%; min-width: 1200px;">
                     <thead>
                         <tr>
-                            <th>ID</th>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Roles</th>
-                            <th>Created At</th>
-                            <th>Actions</th>
+                            <th style="min-width: 60px;">ID</th>
+                            <th style="min-width: 80px;">Gambar</th>
+                            <th style="min-width: 120px;">SKU</th>
+                            <th style="min-width: 200px;">Nama</th>
+                            <th style="min-width: 150px;">Barcode</th>
+                            <th style="min-width: 100px;">Barcode Image</th>
+                            <th style="min-width: 100px;">Unit</th>
+                            <th style="min-width: 100px;">Total Stok</th>
+                            <th style="min-width: 100px;">Status</th>
+                            <th style="min-width: 120px;">Tanggal Dibuat</th>
+                            <th style="min-width: 120px;">Aksi</th>
                         </tr>
                     </thead>
                 </table>
@@ -118,16 +123,16 @@
     </div>
 </div>
 
-<!-- User Modal -->
+<!-- Item Modal -->
 <x-ui.modal
-    id="userModal"
-    title="Create New User"
+    id="itemModal"
+    title="Tambah Barang Baru"
     size="lg"
-    content-id="userModalBody"
+    content-id="itemModalBody"
 >
     <x-slot name="footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-primary" id="btn-submit-form">Save</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+        <button type="button" class="btn btn-primary" id="btn-submit-form">Simpan</button>
     </x-slot>
 </x-ui.modal>
 
@@ -140,21 +145,21 @@
 <script src="{{ asset('assets/libs/datatables.net-bs5/js/dataTables.bootstrap5.min.js') }}"></script>
 <script>
 $(document).ready(function() {
-    // Check if DataTable is already initialized
-    if ($.fn.DataTable.isDataTable('#users-table')) {
-        $('#users-table').DataTable().destroy();
-    }
-
     // Initialize DataTable
-    const usersTable = $('#users-table').DataTable({
+    const itemsTable = $('#items-table').DataTable({
         processing: true,
         serverSide: true,
-        ajax: "{{ route('users.index') }}",
+        ajax: "{{ route('items.index') }}",
         columns: [
             { data: 'id', name: 'id' },
+            { data: 'image_preview', name: 'image_preview', orderable: false, searchable: false },
+            { data: 'sku', name: 'sku' },
             { data: 'name', name: 'name' },
-            { data: 'email', name: 'email' },
-            { data: 'roles', name: 'roles', orderable: false, searchable: false },
+            { data: 'barcode', name: 'barcode' },
+            { data: 'barcode_image', name: 'barcode_image', orderable: false, searchable: false },
+            { data: 'unit', name: 'unit' },
+            { data: 'total_stock', name: 'total_stock', orderable: false },
+            { data: 'stock_status', name: 'stock_status', orderable: false, searchable: false },
             { data: 'created_at', name: 'created_at' },
             { data: 'action', name: 'action', orderable: false, searchable: false }
         ],
@@ -166,71 +171,68 @@ $(document).ready(function() {
         order: [[0, 'desc']],
         language: {
             processing: '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>',
-            lengthMenu: "Show _MENU_ entries",
-            zeroRecords: "No matching records found",
-            info: "Showing _START_ to _END_ of _TOTAL_ entries",
-            infoEmpty: "Showing 0 to 0 of 0 entries",
-            infoFiltered: "(filtered from _MAX_ total entries)",
-            search: "Search:",
+            lengthMenu: "Tampilkan _MENU_ entri",
+            zeroRecords: "Tidak ada data yang ditemukan",
+            info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ entri",
+            infoEmpty: "Menampilkan 0 sampai 0 dari 0 entri",
+            infoFiltered: "(difilter dari _MAX_ total entri)",
+            search: "Cari:",
             paginate: {
-                first: "First",
-                last: "Last",
-                next: "Next",
-                previous: "Previous"
+                first: "Pertama",
+                last: "Terakhir",
+                next: "Selanjutnya",
+                previous: "Sebelumnya"
             }
         }
     });
 
     // Load create form
-    $('#btn-create-user').on('click', function() {
-        Modal.load('userModal', "{{ route('users.create') }}", 'Create New User');
-        // Show submit button for create modal
+    $('#btn-create-item').on('click', function() {
+        Modal.load('itemModal', "{{ route('items.create') }}", 'Tambah Barang Baru');
         $('#btn-submit-form').show();
     });
 
     // Handle show button click (delegated event)
-    $(document).on('click', '.btn-show-user', function(e) {
+    $(document).on('click', '.btn-show-item', function(e) {
         e.preventDefault();
-        const userId = $(this).data('user-id');
-        Modal.load('userModal', `/users/${userId}`, 'User Details');
-        // Hide submit button for show modal
+        const itemId = $(this).data('item-id');
+        Modal.load('itemModal', `/items/${itemId}`, 'Detail Barang');
         $('#btn-submit-form').hide();
     });
 
     // Handle edit button click (delegated event)
-    $(document).on('click', '.btn-edit-user', function(e) {
+    $(document).on('click', '.btn-edit-item', function(e) {
         e.preventDefault();
-        const userId = $(this).data('user-id');
-        Modal.load('userModal', `/users/${userId}/edit`, 'Edit User');
-        // Show submit button for edit modal
+        const itemId = $(this).data('item-id');
+        Modal.load('itemModal', `/items/${itemId}/edit`, 'Edit Barang');
         $('#btn-submit-form').show();
     });
 
     // Handle form submission
     $('#btn-submit-form').on('click', function() {
-        Form.submit('#user-form', {
+        Form.submit('#item-form', {
             success: function(response) {
                 if (response.success) {
-                    Modal.hide('userModal');
+                    Modal.hide('itemModal');
                     Toast.success(response.message);
-                    usersTable.ajax.reload(null, false); // Reload table without resetting pagination
+                    itemsTable.ajax.reload(null, false);
                 }
             }
         });
     });
 
     // Handle delete button click (delegated event)
-    $(document).on('click', '.btn-delete-user', function(e) {
+    $(document).on('click', '.btn-delete-item', function(e) {
         e.preventDefault();
-        const userId = $(this).data('user-id');
-        const userName = $(this).data('user-name');
+        const itemId = $(this).data('item-id');
+        const itemName = $(this).data('item-name');
 
-        if (!confirm(`Are you sure you want to delete user "${userName}"?`)) {
+        if (!confirm(`Apakah Anda yakin ingin menghapus barang "${itemName}"?`)) {
             return;
         }
 
         $.ajax({
-            url: `/users/${userId}`,
+            url: `/items/${itemId}`,
             method: 'POST',
             data: {
                 _method: 'DELETE',
@@ -242,22 +244,23 @@ $(document).ready(function() {
             success: function(response) {
                 if (response.success) {
                     Toast.success(response.message);
-                    usersTable.ajax.reload(null, false);
+                    itemsTable.ajax.reload(null, false);
                 }
             },
-            error: function() {
-                Toast.error('Failed to delete user.');
+            error: function(xhr) {
+                const message = xhr.responseJSON?.message || 'Gagal menghapus barang.';
+                Toast.error(message);
             }
         });
     });
 
     // Reset form when modal is hidden
-    $('#userModal').on('hidden.bs.modal', function() {
-        Modal.clear('userModal');
-        // Show submit button by default
+    $('#itemModal').on('hidden.bs.modal', function() {
+        Modal.clear('itemModal');
         $('#btn-submit-form').show();
     });
 });
 </script>
 @endpush
 @endsection
+

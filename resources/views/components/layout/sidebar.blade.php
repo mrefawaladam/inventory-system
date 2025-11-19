@@ -24,43 +24,6 @@
             </a>
           </li>
 
-          <!-- Apps -->
-          <li>
-            <span class="sidebar-divider lg"></span>
-          </li>
-          <li class="nav-small-cap">
-            <iconify-icon icon="solar:menu-dots-linear" class="mini-icon"></iconify-icon>
-            <span class="hide-menu">Apps</span>
-          </li>
-
-          <li class="sidebar-item">
-            <a class="sidebar-link" href="{{ route('chat.index') }}">
-              <iconify-icon icon="solar:chat-round-line-line-duotone"></iconify-icon>
-              <span class="hide-menu">Chat</span>
-            </a>
-          </li>
-
-          <li class="sidebar-item">
-            <a class="sidebar-link" href="#">
-              <iconify-icon icon="solar:letter-line-duotone"></iconify-icon>
-              <span class="hide-menu">Email</span>
-            </a>
-          </li>
-
-          <li class="sidebar-item">
-            <a class="sidebar-link" href="#">
-              <iconify-icon icon="solar:calendar-mark-line-duotone"></iconify-icon>
-              <span class="hide-menu">Calendar</span>
-            </a>
-          </li>
-
-          <li class="sidebar-item">
-            <a class="sidebar-link" href="#">
-              <iconify-icon icon="solar:document-text-line-duotone"></iconify-icon>
-              <span class="hide-menu">Notes</span>
-            </a>
-          </li>
-
           <!-- Pages -->
           <li>
             <span class="sidebar-divider lg"></span>
@@ -85,9 +48,83 @@
           </li>
 
           <li class="sidebar-item">
-            <a href="{{ route('blank') }}" class="sidebar-link">
+            <a class="sidebar-link" href="{{ route('locations.index') }}">
+              <iconify-icon icon="solar:map-point-line-duotone"></iconify-icon>
+              <span class="hide-menu">Location Management</span>
+            </a>
+          </li>
+
+          <li class="sidebar-item">
+            <a class="sidebar-link" href="{{ route('items.index') }}">
+              <iconify-icon icon="solar:box-line-duotone"></iconify-icon>
+              <span class="hide-menu">Item Management</span>
+            </a>
+          </li>
+
+          <li class="sidebar-item">
+            <a class="sidebar-link" href="{{ route('stocks.index') }}">
+              <iconify-icon icon="solar:layers-line-duotone"></iconify-icon>
+              <span class="hide-menu">Stock Management</span>
+            </a>
+          </li>
+
+          <!-- Transactions -->
+          <li>
+            <span class="sidebar-divider lg"></span>
+          </li>
+          <li class="nav-small-cap">
+            <iconify-icon icon="solar:menu-dots-linear" class="mini-icon"></iconify-icon>
+            <span class="hide-menu">Transaksi</span>
+          </li>
+
+          <li class="sidebar-item">
+            <a class="sidebar-link" href="{{ route('inbound.index') }}">
+              <iconify-icon icon="solar:arrow-down-line-duotone"></iconify-icon>
+              <span class="hide-menu">Inbound</span>
+            </a>
+          </li>
+
+          <li class="sidebar-item">
+            <a class="sidebar-link" href="{{ route('outbound.index') }}">
+              <iconify-icon icon="solar:arrow-up-line-duotone"></iconify-icon>
+              <span class="hide-menu">Outbound</span>
+            </a>
+          </li>
+
+          <li class="sidebar-item">
+            <a class="sidebar-link" href="{{ route('transfer.index') }}">
+              <iconify-icon icon="solar:transfer-horizontal-line-duotone"></iconify-icon>
+              <span class="hide-menu">Transfer</span>
+            </a>
+          </li>
+
+          <!-- Reports -->
+          <li>
+            <span class="sidebar-divider lg"></span>
+          </li>
+          <li class="nav-small-cap">
+            <iconify-icon icon="solar:menu-dots-linear" class="mini-icon"></iconify-icon>
+            <span class="hide-menu">Laporan</span>
+          </li>
+
+          <li class="sidebar-item">
+            <a class="sidebar-link" href="{{ route('reports.index') }}">
               <iconify-icon icon="solar:document-text-line-duotone"></iconify-icon>
-              <span class="hide-menu">Blank Page</span>
+              <span class="hide-menu">Laporan Transaksi</span>
+            </a>
+          </li>
+
+          <li class="sidebar-item">
+            <a class="sidebar-link" href="{{ route('tracking.index') }}">
+              <iconify-icon icon="solar:map-point-search-line-duotone"></iconify-icon>
+              <span class="hide-menu">Tracking Maps</span>
+            </a>
+          </li>
+
+          <li class="sidebar-item">
+            <a class="sidebar-link" href="{{ route('heatmap.index') }}">
+              <iconify-icon icon="solar:graph-up-line-duotone"></iconify-icon>
+              <span class="hide-menu">Heatmap Analytics</span>
             </a>
           </li>
 

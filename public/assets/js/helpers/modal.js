@@ -8,7 +8,9 @@
  *   Modal.hide('userModal');
  */
 
-class ModalHelper {
+// Prevent duplicate class declaration
+if (typeof ModalHelper === 'undefined') {
+    class ModalHelper {
     constructor() {
         this.modals = {};
     }
@@ -145,8 +147,11 @@ class ModalHelper {
             }
         }
     }
-}
+    }
 
-// Create global instance
-window.Modal = new ModalHelper();
+    // Create global instance only if it doesn't exist
+    if (typeof window.Modal === 'undefined') {
+        window.Modal = new ModalHelper();
+    }
+}
 

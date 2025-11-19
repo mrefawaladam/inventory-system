@@ -9,7 +9,9 @@
  *   Toast.show('info', 'New update available.');
  */
 
-class ToastNotification {
+// Prevent duplicate class declaration
+if (typeof ToastNotification === 'undefined') {
+    class ToastNotification {
     constructor(options = {}) {
         this.defaultOptions = {
             id: options.id || 'notificationToast',
@@ -177,8 +179,11 @@ class ToastNotification {
     info(message, title = null, options = {}) {
         this.show('info', message, title, options);
     }
-}
+    }
 
-// Create global instance
-window.Toast = new ToastNotification();
+    // Create global instance only if it doesn't exist
+    if (typeof window.Toast === 'undefined') {
+        window.Toast = new ToastNotification();
+    }
+}
 

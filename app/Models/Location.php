@@ -61,6 +61,14 @@ class Location extends Model
     }
 
     /**
+     * Get stocks at this location.
+     */
+    public function stocks(): HasMany
+    {
+        return $this->hasMany(Stock::class);
+    }
+
+    /**
      * Get all zones for a warehouse.
      */
     public static function getZonesForWarehouse(int $warehouseId)

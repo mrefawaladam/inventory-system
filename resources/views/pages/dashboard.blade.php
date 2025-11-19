@@ -2,6 +2,10 @@
 
 @section('title', 'Dashboard')
 
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+@endpush
+
 @section('content')
 <div class="card card-body py-3">
   <div class="row align-items-center">
@@ -20,15 +24,26 @@
   </div>
 </div>
 
+<!-- Statistics Cards -->
+@include('pages.partials.statistics-cards')
+
+<!-- Transaction Statistics -->
+@include('pages.partials.transaction-stats')
+
+<!-- Chart Section -->
+@include('pages.partials.chart-section')
+
+<!-- Low Stock Items & Top Items -->
 <div class="row">
-  <div class="col-12">
-    <div class="card">
-      <div class="card-body">
-        <h5 class="card-title">Welcome to Starter Template</h5>
-        <p class="card-text">This is your Laravel starter template with MatDash Bootstrap Admin theme.</p>
-        <a href="{{ route('chat.index') }}" class="btn btn-primary">Go to Chat</a>
+  <div class="col-lg-6">
+    @include('pages.partials.low-stock-items')
       </div>
-    </div>
+  <div class="col-lg-6">
+    @include('pages.partials.top-items')
   </div>
 </div>
+
+<!-- Recent Transactions -->
+@include('pages.partials.recent-transactions')
+
 @endsection

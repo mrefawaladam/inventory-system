@@ -102,6 +102,35 @@
     #search-results .list-group-item:last-child {
         border-bottom: none;
     }
+    /* Map search results styling */
+    #map-search-results {
+        background: white;
+        border: 1px solid #ddd;
+    }
+    #map-search-results .list-group-item {
+        cursor: pointer;
+        border-left: none;
+        border-right: none;
+    }
+    #map-search-results .list-group-item:first-child {
+        border-top: none;
+    }
+    #map-search-results .list-group-item:hover {
+        background-color: #f8f9fa;
+    }
+    #map-search-results .list-group-item:last-child {
+        border-bottom: none;
+    }
+    @media (max-width: 768px) {
+        .d-flex.justify-content-between.align-items-center.mb-3 {
+            flex-direction: column;
+            align-items: flex-start !important;
+        }
+        .d-flex.justify-content-between.align-items-center.mb-3 > div {
+            width: 100% !important;
+            margin-top: 10px;
+        }
+    }
 </style>
 @endpush
 
@@ -260,6 +289,122 @@ $(document).ready(function() {
             } else if (warehouseMarkers.length === 1) {
                 warehouseMap.setView([warehouseMarkers[0].getLatLng().lat, warehouseMarkers[0].getLatLng().lng], 13);
             }
+
+            // Search location on map overview
+            let searchMarker = null;
+            const mapSearchInput = $('#map-location-search');
+            const mapSearchResults = $('#map-search-results');
+            let mapSearchTimeout;
+
+            function searchMapLocation(query) {
+                if (!query || query.length < 3) {
+                    mapSearchResults.hide();
+                    return;
+                }
+
+                mapSearchResults.html('<div class="list-group-item"><div class="spinner-border spinner-border-sm me-2" role="status"></div> Mencari lokasi...</div>');
+                mapSearchResults.show();
+
+                $.ajax({
+                    url: 'https://nominatim.openstreetmap.org/search',
+                    method: 'GET',
+                    data: {
+                        q: query,
+                        format: 'json',
+                        addressdetails: 1,
+                        limit: 5,
+                        'accept-language': 'id',
+                        countrycodes: 'id' // Limit to Indonesia
+                    },
+                    headers: {
+                        'User-Agent': 'Warehouse Management System'
+                    },
+                    success: function(data) {
+                        mapSearchResults.empty();
+                        if (data && data.length > 0) {
+                            data.forEach(function(place) {
+                                const item = $('<a href="#" class="list-group-item list-group-item-action"></a>');
+                                item.html('<strong>' + place.display_name + '</strong><br><small class="text-muted">Lat: ' + place.lat + ', Lng: ' + place.lon + '</small>');
+                                item.on('click', function(e) {
+                                    e.preventDefault();
+                                    const lat = parseFloat(place.lat);
+                                    const lng = parseFloat(place.lon);
+
+                                    // Remove previous search marker
+                                    if (searchMarker) {
+                                        warehouseMap.removeLayer(searchMarker);
+                                    }
+
+                                    // Add new search marker with different color (red)
+                                    searchMarker = L.marker([lat, lng], {
+                                        icon: L.icon({
+                                            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+                                            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+                                            iconSize: [25, 41],
+                                            iconAnchor: [12, 41],
+                                            popupAnchor: [1, -34],
+                                            shadowSize: [41, 41]
+                                        })
+                                    }).addTo(warehouseMap);
+
+                                    searchMarker.bindPopup('<b>' + place.display_name + '</b>').openPopup();
+
+                                    // Zoom to location
+                                    warehouseMap.setView([lat, lng], 13);
+
+                                    mapSearchResults.hide();
+                                    mapSearchInput.val('');
+                                });
+                                mapSearchResults.append(item);
+                            });
+                        } else {
+                            mapSearchResults.html('<div class="list-group-item text-muted">Tidak ada hasil ditemukan</div>');
+                        }
+                    },
+                    error: function() {
+                        mapSearchResults.html('<div class="list-group-item text-danger">Error saat mencari lokasi</div>');
+                    }
+                });
+            }
+
+            // Search on button click
+            $('#btn-search-map-location').on('click', function() {
+                const query = mapSearchInput.val().trim();
+                if (query) {
+                    searchMapLocation(query);
+                }
+            });
+
+            // Search on Enter key
+            mapSearchInput.on('keypress', function(e) {
+                if (e.which === 13) {
+                    e.preventDefault();
+                    const query = $(this).val().trim();
+                    if (query) {
+                        searchMapLocation(query);
+                    }
+                }
+            });
+
+            // Search as you type (with debounce)
+            mapSearchInput.on('input', function() {
+                clearTimeout(mapSearchTimeout);
+                const query = $(this).val().trim();
+                if (query.length >= 3) {
+                    mapSearchTimeout = setTimeout(function() {
+                        searchMapLocation(query);
+                    }, 500);
+                } else {
+                    mapSearchResults.hide();
+                }
+            });
+
+            // Hide search results when clicking outside
+            $(document).on('click.mapSearch', function(e) {
+                if (!$(e.target).closest('#map-location-search, #map-search-results, #btn-search-map-location').length) {
+                    mapSearchResults.hide();
+                }
+            });
         } catch (error) {
             console.error('Error initializing map:', error);
         }
@@ -389,7 +534,7 @@ $(document).ready(function() {
         Modal.clear('warehouseModal');
         // Show submit button by default
         $('#btn-submit-form').show();
-        // Clean up location map
+        // Clean up location maps
         if (window.locationMap) {
             try {
                 window.locationMap.remove();
@@ -397,11 +542,95 @@ $(document).ready(function() {
             window.locationMap = null;
             window.locationMarker = null;
         }
+        if (window.showLocationMap) {
+            try {
+                window.showLocationMap.remove();
+            } catch(e) {}
+            window.showLocationMap = null;
+        }
     });
 
     // Initialize location map for warehouse form
     window.locationMap = null;
     window.locationMarker = null;
+
+    // Initialize show location map
+    window.showLocationMap = null;
+
+    function initShowLocationMap(retryCount = 0) {
+        // Check if map container exists
+        if (!$('#show-location-map').length) {
+            return false;
+        }
+
+        // Check if Leaflet is loaded, retry if not
+        if (typeof L === 'undefined' || typeof L.map !== 'function') {
+            if (retryCount < 20) { // Retry up to 2 seconds
+                setTimeout(function() {
+                    initShowLocationMap(retryCount + 1);
+                }, 100);
+                return false;
+            } else {
+                console.error('Leaflet library failed to load');
+                return false;
+            }
+        }
+
+        // Destroy existing map if any
+        if (window.showLocationMap) {
+            try {
+                window.showLocationMap.remove();
+            } catch(e) {}
+            window.showLocationMap = null;
+        }
+
+        const dataEl = $('#show-location-map-data');
+        if (!dataEl.length || !dataEl.data('lat') || !dataEl.data('lng')) {
+            return false;
+        }
+
+        const lat = parseFloat(dataEl.data('lat'));
+        const lng = parseFloat(dataEl.data('lng'));
+        const name = dataEl.data('name') || '';
+        const address = dataEl.data('address') || '';
+
+        if (isNaN(lat) || isNaN(lng)) {
+            return false;
+        }
+
+        try {
+            // Initialize map
+            window.showLocationMap = L.map('show-location-map', {
+                zoomControl: true
+            }).setView([lat, lng], 15);
+
+            // Add OpenStreetMap tiles
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                maxZoom: 19
+            }).addTo(window.showLocationMap);
+
+            // Add marker
+            const marker = L.marker([lat, lng]).addTo(window.showLocationMap);
+            // Escape HTML untuk popup content
+            const safeName = (name || '').replace(/['"]/g, '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            const safeAddress = (address || '').replace(/['"]/g, '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            const popupContent = '<b>' + safeName + '</b>' + (safeAddress ? '<br>' + safeAddress : '');
+            marker.bindPopup(popupContent).openPopup();
+
+            // Invalidate size to ensure map renders correctly
+            setTimeout(function() {
+                if (window.showLocationMap) {
+                    window.showLocationMap.invalidateSize();
+                }
+            }, 300);
+
+            return true;
+        } catch (error) {
+            console.error('Error initializing show location map:', error);
+            return false;
+        }
+    }
 
     function initLocationMap(retryCount = 0) {
         // Check if map container exists
@@ -648,8 +877,13 @@ $(document).ready(function() {
     $('#warehouseModal').on('shown.bs.modal', function() {
         // Wait for content to be loaded via AJAX
         setTimeout(function() {
+            // Initialize form location map
             if ($('#location-map').length && !window.locationMap) {
                 initLocationMap();
+            }
+            // Initialize show location map
+            if ($('#show-location-map').length && !window.showLocationMap) {
+                initShowLocationMap();
             }
         }, 600);
     });
@@ -659,16 +893,34 @@ $(document).ready(function() {
     const modalBody = document.getElementById('warehouseModalBody');
     if (modalBody) {
         mapObserver = new MutationObserver(function(mutations) {
-            // Check if location-map was added
+            // Check if location-map or show-location-map was added
             mutations.forEach(function(mutation) {
                 mutation.addedNodes.forEach(function(node) {
                     if (node.nodeType === 1) { // Element node
-                        if ($(node).find('#location-map').length || $(node).is('#location-map')) {
+                        const $node = $(node);
+                        // Check for form location map
+                        if ($node.find('#location-map').length || $node.is('#location-map')) {
                             setTimeout(function() {
                                 if ($('#location-map').length && !window.locationMap) {
                                     initLocationMap();
                                 }
                             }, 400);
+                        }
+                        // Check for show location map
+                        if ($node.find('#show-location-map').length || $node.is('#show-location-map')) {
+                            setTimeout(function() {
+                                if ($('#show-location-map').length && !window.showLocationMap) {
+                                    initShowLocationMap();
+                                }
+                            }, 500);
+                        }
+                        // Also check for show-location-map-data to ensure data is loaded
+                        if ($node.find('#show-location-map-data').length || $node.is('#show-location-map-data')) {
+                            setTimeout(function() {
+                                if ($('#show-location-map').length && $('#show-location-map-data').length && !window.showLocationMap) {
+                                    initShowLocationMap();
+                                }
+                            }, 500);
                         }
                     }
                 });
