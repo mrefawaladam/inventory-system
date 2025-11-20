@@ -102,7 +102,8 @@
                             <th>Jumlah</th>
                             <th>Batch</th>
                             <th>User</th>
-                            <th>Tanggal</th>
+                            <th>Tanggal Pengiriman</th>
+                            <th>Tanggal Terima</th>
                         </tr>
                     </thead>
                 </table>
@@ -152,7 +153,8 @@ $(document).ready(function() {
                 { data: 'quantity', name: 'quantity' },
                 { data: 'batch', name: 'batch' },
                 { data: 'user_name', name: 'user_name', orderable: false },
-                { data: 'created_at', name: 'created_at' },
+                { data: 'shipped_at', name: 'shipped_at' },
+                { data: 'received_at', name: 'received_at' },
             ],
             order: [[9, 'desc']],
             scrollX: true,

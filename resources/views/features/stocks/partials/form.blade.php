@@ -81,16 +81,15 @@
     </div>
 
     <div class="mb-3">
-        <label for="expired_at" class="form-label">Tanggal Kadaluarsa</label>
+        <label for="expired_at" class="form-label">Tanggal Pengiriman</label>
         <input
             type="date"
             class="form-control"
             id="expired_at"
             name="expired_at"
             value="{{ $isEdit && $stock->expired_at ? $stock->expired_at->format('Y-m-d') : old('expired_at') }}"
-            min="{{ date('Y-m-d') }}"
         >
-        <small class="text-muted">Kosongkan jika tidak ada tanggal kadaluarsa</small>
+        <small class="text-muted">Isi jika ada jadwal pengiriman</small>
         <div class="invalid-feedback d-none" id="expired_at-error"></div>
     </div>
 </form>

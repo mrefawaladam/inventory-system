@@ -43,14 +43,14 @@
           <li class="sidebar-item">
             <a class="sidebar-link" href="{{ route('warehouses.index') }}">
               <iconify-icon icon="solar:home-smile-line-duotone"></iconify-icon>
-              <span class="hide-menu">Warehouse Management</span>
+              <span class="hide-menu">Manajemen Sekolah</span>
             </a>
           </li>
 
           <li class="sidebar-item">
             <a class="sidebar-link" href="{{ route('locations.index') }}">
               <iconify-icon icon="solar:map-point-line-duotone"></iconify-icon>
-              <span class="hide-menu">Location Management</span>
+              <span class="hide-menu">Manajemen Lokasi</span>
             </a>
           </li>
 
@@ -117,7 +117,7 @@
           <li class="sidebar-item">
             <a class="sidebar-link" href="{{ route('tracking.index') }}">
               <iconify-icon icon="solar:map-point-search-line-duotone"></iconify-icon>
-              <span class="hide-menu">Tracking Maps</span>
+              <span class="hide-menu">Tracking Pengiriman</span>
             </a>
           </li>
 

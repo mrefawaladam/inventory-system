@@ -67,18 +67,20 @@ $(document).ready(function() {
         });
     }
 
-    // Get route color based on type
-    function getRouteColor(type) {
-        switch(type) {
-            case 'TRANSFER':
-                return '#007bff'; // Blue
-            case 'INBOUND':
-                return '#ffc107'; // Yellow
-            case 'OUTBOUND':
-                return '#6c757d'; // Gray
-            default:
-                return '#007bff';
-        }
+    // Get color based on delivery status
+    function getStatusColor(status) {
+        return status === 'delivered' ? '#28a745' : '#dc3545';
+    }
+
+    function getMarkerIcon(status) {
+        const color = status === 'delivered' ? 'green' : 'red';
+        return L.icon({
+            iconUrl: `https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-${color}.png`,
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34]
+        });
     }
 
     // Add route to map
@@ -90,36 +92,28 @@ $(document).ready(function() {
         const toLat = route.to.latitude;
         const toLng = route.to.longitude;
 
+        const status = route.delivery_status || 'pending';
+        const statusColor = getStatusColor(status);
+        const markerIcon = getMarkerIcon(status);
+
         // Create polyline
         const polyline = L.polyline(
             [[fromLat, fromLng], [toLat, toLng]],
             {
-                color: getRouteColor(route.type),
+                color: statusColor,
                 weight: 3,
                 opacity: 0.7
             }
         ).addTo(trackingMap);
 
-        // Create origin marker (green)
+        // Create origin marker
         const originMarker = L.marker([fromLat, fromLng], {
-            icon: L.icon({
-                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
-                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-                iconSize: [25, 41],
-                iconAnchor: [12, 41],
-                popupAnchor: [1, -34]
-            })
+            icon: markerIcon
         }).addTo(trackingMap);
 
-        // Create destination marker (red)
+        // Create destination marker
         const destMarker = L.marker([toLat, toLng], {
-            icon: L.icon({
-                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
-                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-                iconSize: [25, 41],
-                iconAnchor: [12, 41],
-                popupAnchor: [1, -34]
-            })
+            icon: markerIcon
         }).addTo(trackingMap);
 
         // Popup content
@@ -132,6 +126,7 @@ $(document).ready(function() {
                 <p class="mb-1"><strong>Quantity:</strong> ${route.quantity.toLocaleString('id-ID')}</p>
                 <p class="mb-1"><strong>Dari:</strong> ${route.from.warehouse_name || 'N/A'}</p>
                 <p class="mb-1"><strong>Ke:</strong> ${route.to.warehouse_name || 'N/A'}</p>
+                <p class="mb-1"><strong>Status:</strong> ${route.delivery_status_label || (status === 'delivered' ? 'Sudah Dikirim' : 'Belum Dikirim')}</p>
                 <p class="mb-1"><strong>Jarak:</strong> ${route.distance_km} km</p>
                 <p class="mb-1"><strong>Tanggal:</strong> ${route.created_at_formatted}</p>
                 <p class="mb-0"><strong>User:</strong> ${route.user.name}</p>

@@ -224,7 +224,7 @@ class StockService
         if ($location->capacity > 0 && $newTotalQuantity > $location->capacity) {
             $available = $location->capacity - $currentQuantity;
             throw new \Exception(
-                "Kapasitas lokasi terlampaui. Kapasitas: {$location->capacity}, " .
+                "Jumlah siswa penerima di lokasi ini sudah maksimal. Kapasitas: {$location->capacity}, " .
                 "Saat ini: {$currentQuantity}, Tersedia: {$available}, " .
                 "Diminta: {$additionalQuantity}"
             );
@@ -246,21 +246,19 @@ class StockService
 
         $totalQuantity = $stocks->sum('quantity');
         $batches = $stocks->count();
-        $expiredItems = $stocks->filter(function ($stock) {
+        $deliveredQuantity = $stocks->filter(function ($stock) {
             return $stock->expired_at && $stock->expired_at->isPast();
         })->sum('quantity');
 
-        $expiringSoon = $stocks->filter(function ($stock) {
-            return $stock->expired_at &&
-                   $stock->expired_at->isFuture() &&
-                   $stock->expired_at->diffInDays(now()) <= 30;
+        $pendingQuantity = $stocks->filter(function ($stock) {
+            return !$stock->expired_at || $stock->expired_at->isFuture();
         })->sum('quantity');
 
         return [
             'total_quantity' => $totalQuantity,
             'batches' => $batches,
-            'expired_items' => $expiredItems,
-            'expiring_soon' => $expiringSoon,
+            'delivered_quantity' => $deliveredQuantity,
+            'pending_quantity' => $pendingQuantity,
             'stocks' => $stocks,
         ];
     }
@@ -275,7 +273,7 @@ class StockService
             'location_id' => 'required|exists:locations,id',
             'quantity' => 'required|integer|min:1',
             'batch' => 'nullable|string|max:255',
-            'expired_at' => 'nullable|date|after_or_equal:today',
+            'expired_at' => 'nullable|date',
         ];
     }
 

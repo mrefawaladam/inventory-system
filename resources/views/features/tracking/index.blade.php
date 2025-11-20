@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Tracking Maps')
+@section('title', 'Tracking Pengiriman')
 
 @push('styles')
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -43,8 +43,8 @@
 
 @section('content')
 <x-layout.page-header
-    title="Tracking Maps"
-    :breadcrumb-title="'Tracking Maps'"
+    title="Tracking Pengiriman"
+    :breadcrumb-title="'Tracking Pengiriman'"
 />
 
 <!-- Toast Notification -->
@@ -57,13 +57,13 @@
             <li class="nav-item">
                 <a class="nav-link active" href="{{ route('tracking.index') }}">
                     <iconify-icon icon="solar:map-point-search-line-duotone" class="me-1"></iconify-icon>
-                    Route Visualization
+                    Tracking Pengiriman
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('tracking.item-history') }}">
                     <iconify-icon icon="solar:history-line-duotone" class="me-1"></iconify-icon>
-                    Item Movement History
+                    History Pengiriman Item
                 </a>
             </li>
         </ul>

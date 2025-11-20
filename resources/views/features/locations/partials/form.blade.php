@@ -12,14 +12,14 @@
     @endif
 
     <div class="mb-3">
-        <label for="warehouse_id" class="form-label">Gudang <span class="text-danger">*</span></label>
+        <label for="warehouse_id" class="form-label">Sekolah <span class="text-danger">*</span></label>
         <select
             class="form-select"
             id="warehouse_id"
             name="warehouse_id"
             required
         >
-            <option value="">Pilih Gudang</option>
+            <option value="">Pilih Sekolah</option>
             @foreach($warehouses as $warehouse)
                 <option value="{{ $warehouse->id }}" {{ $selectedWarehouseId == $warehouse->id ? 'selected' : '' }}>
                     {{ $warehouse->name }}
@@ -83,7 +83,7 @@
     </div>
 
     <div class="mb-3">
-        <label for="capacity" class="form-label">Kapasitas <span class="text-danger">*</span></label>
+        <label for="capacity" class="form-label">Jumlah Siswa yang Menerima <span class="text-danger">*</span></label>
         <input
             type="number"
             class="form-control"
@@ -93,7 +93,7 @@
             min="0"
             required
         >
-        <small class="text-muted">Kapasitas maksimal yang dapat ditampung</small>
+        <small class="text-muted">Isikan jumlah siswa penerima untuk lokasi ini</small>
         <div class="invalid-feedback d-none" id="capacity-error"></div>
     </div>
 
@@ -240,7 +240,7 @@
     $(document).ready(function() {
         const type = typeSelect.val();
         const warehouseId = warehouseSelect.val();
-        
+
         @if($isEdit && $location->parent)
             const currentParentId = {{ $location->parent_id }};
             @if($location->parent->type->value === 'ZONE')

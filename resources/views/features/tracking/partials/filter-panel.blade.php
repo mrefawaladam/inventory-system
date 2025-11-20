@@ -23,9 +23,9 @@
                 </select>
             </div>
             <div class="col-md-3">
-                <label class="form-label">Warehouse</label>
+                <label class="form-label">Sekolah</label>
                 <select name="warehouse_id" id="filter-warehouse" class="form-select">
-                    <option value="">Semua Warehouse</option>
+                    <option value="">Semua Sekolah</option>
                     @foreach($warehouses as $warehouse)
                         <option value="{{ $warehouse->id }}" {{ $filters['warehouse_id'] == $warehouse->id ? 'selected' : '' }}>
                             {{ $warehouse->name }}

@@ -19,7 +19,7 @@
 
 <div class="row">
     <div class="col-md-6 mb-3">
-        <label class="form-label fw-bold">Gudang</label>
+        <label class="form-label fw-bold">Sekolah</label>
         <p class="mb-0">{{ $location->warehouse->name }}</p>
     </div>
     <div class="col-md-6 mb-3">
@@ -35,7 +35,7 @@
 
 <div class="row">
     <div class="col-md-6 mb-3">
-        <label class="form-label fw-bold">Kapasitas</label>
+        <label class="form-label fw-bold">Jumlah Siswa yang Menerima</label>
         <p class="mb-0">{{ number_format($location->capacity, 0, ',', '.') }}</p>
     </div>
     <div class="col-md-6 mb-3">

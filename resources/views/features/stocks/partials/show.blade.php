@@ -13,7 +13,7 @@
 
 <div class="row">
     <div class="col-md-6 mb-3">
-        <label class="form-label fw-bold">Gudang</label>
+        <label class="form-label fw-bold">Sekolah</label>
         <p class="mb-0">{{ $stock->location->warehouse->name ?? '-' }}</p>
     </div>
     <div class="col-md-6 mb-3">
@@ -33,19 +33,17 @@
         <p class="mb-0">{{ $stock->batch ?? '-' }}</p>
     </div>
     <div class="col-md-6 mb-3">
-        <label class="form-label fw-bold">Tanggal Kadaluarsa</label>
+        <label class="form-label fw-bold">Tanggal Pengiriman</label>
         <p class="mb-0">
             @if($stock->expired_at)
                 {{ $stock->expired_at->format('Y-m-d') }}
                 @if($stock->expired_at->isPast())
-                    <span class="badge bg-danger ms-2">Expired</span>
-                @elseif($stock->expired_at->diffInDays(now()) <= 30)
-                    <span class="badge bg-warning ms-2">Expiring Soon</span>
+                    <span class="badge bg-success ms-2">Sudah Dikirim</span>
                 @else
-                    <span class="badge bg-success ms-2">Valid</span>
+                    <span class="badge bg-danger ms-2">Belum Dikirim</span>
                 @endif
             @else
-                -
+                - <span class="badge bg-danger ms-2">Belum Dikirim</span>
             @endif
         </p>
     </div>
@@ -80,16 +78,16 @@
         <div class="col-md-3">
             <div class="card">
                 <div class="card-body text-center">
-                    <h4 class="text-danger">{{ number_format($summary['expired_items'], 0, ',', '.') }}</h4>
-                    <p class="mb-0 text-muted">Expired Items</p>
+                    <h4 class="text-success">{{ number_format($summary['delivered_quantity'], 0, ',', '.') }}</h4>
+                    <p class="mb-0 text-muted">Sudah Dikirim</p>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card">
                 <div class="card-body text-center">
-                    <h4 class="text-warning">{{ number_format($summary['expiring_soon'], 0, ',', '.') }}</h4>
-                    <p class="mb-0 text-muted">Expiring Soon</p>
+                    <h4 class="text-danger">{{ number_format($summary['pending_quantity'], 0, ',', '.') }}</h4>
+                    <p class="mb-0 text-muted">Belum Dikirim</p>
                 </div>
             </div>
         </div>

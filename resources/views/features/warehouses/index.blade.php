@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Manajemen Gudang')
+@section('title', 'Manajemen Sekolah')
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css') }}" />
@@ -136,8 +136,8 @@
 
 @section('content')
 <x-layout.page-header
-    title="Manajemen Gudang"
-    :breadcrumb-title="'Manajemen Gudang'"
+    title="Manajemen Sekolah"
+    :breadcrumb-title="'Manajemen Sekolah'"
 />
 
 <!-- Toast Notification -->
@@ -147,14 +147,14 @@
 <div class="card mb-4">
     <div class="card-body">
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h4 class="card-title mb-0">Peta Lokasi Gudang</h4>
+            <h4 class="card-title mb-0">Peta Titik Lokasi Sekolah</h4>
             <div class="position-relative" style="width: 400px; max-width: 100%;">
                 <div class="input-group">
                     <input
                         type="text"
                         class="form-control"
                         id="map-location-search"
-                        placeholder="Cari lokasi di peta (contoh: Jakarta, Bandung)..."
+                        placeholder="Cari alamat sekolah (contoh: Jln Merdeka, Kelurahan X)..."
                     >
                     <button class="btn btn-outline-primary" type="button" id="btn-search-map-location">
                         <i class="ti ti-search"></i> Cari
@@ -175,13 +175,13 @@
         <div class="card-body">
             <div class="d-flex justify-content-between align-items-start mb-3">
                 <div>
-                    <h4 class="card-title">Daftar Gudang</h4>
+                    <h4 class="card-title">Daftar Sekolah</h4>
                     <p class="card-subtitle mb-3">
-                        Kelola gudang dan lokasinya. Anda dapat membuat, mengedit, dan menghapus gudang dari halaman ini.
+                        Kelola sekolah penerima beserta titik lokasinya (alamat jalan). Anda dapat membuat, mengedit, dan menghapus sekolah dari halaman ini.
                     </p>
                 </div>
                 <button type="button" class="btn btn-primary" id="btn-create-warehouse">
-                    <i class="ti ti-plus me-1"></i> Tambah Gudang Baru
+                    <i class="ti ti-plus me-1"></i> Tambah Sekolah
                 </button>
             </div>
             <div class="table-responsive" style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
@@ -189,8 +189,8 @@
                     <thead>
                         <tr>
                             <th style="min-width: 60px;">ID</th>
-                            <th style="min-width: 150px;">Nama</th>
-                            <th style="min-width: 200px;">Alamat</th>
+                            <th style="min-width: 150px;">Nama Sekolah</th>
+                            <th style="min-width: 200px;">Alamat Jalan</th>
                             <th style="min-width: 150px;">Koordinat</th>
                             <th style="min-width: 120px;">Tanggal Dibuat</th>
                             <th style="min-width: 120px;">Aksi</th>
@@ -205,7 +205,7 @@
 <!-- Warehouse Modal -->
 <x-ui.modal
     id="warehouseModal"
-    title="Tambah Gudang Baru"
+    title="Tambah Sekolah"
     size="lg"
     content-id="warehouseModalBody"
 >
@@ -317,7 +317,7 @@ $(document).ready(function() {
                         countrycodes: 'id' // Limit to Indonesia
                     },
                     headers: {
-                        'User-Agent': 'Warehouse Management System'
+                        'User-Agent': 'School Distribution System'
                     },
                     success: function(data) {
                         mapSearchResults.empty();
@@ -453,7 +453,7 @@ $(document).ready(function() {
 
     // Load create form
     $('#btn-create-warehouse').on('click', function() {
-        Modal.load('warehouseModal', "{{ route('warehouses.create') }}", 'Tambah Gudang Baru');
+        Modal.load('warehouseModal', "{{ route('warehouses.create') }}", 'Tambah Sekolah');
         // Show submit button for create modal
         $('#btn-submit-form').show();
     });
@@ -462,7 +462,7 @@ $(document).ready(function() {
     $(document).on('click', '.btn-show-warehouse', function(e) {
         e.preventDefault();
         const warehouseId = $(this).data('warehouse-id');
-        Modal.load('warehouseModal', `/warehouses/${warehouseId}`, 'Detail Gudang');
+        Modal.load('warehouseModal', `/warehouses/${warehouseId}`, 'Detail Sekolah');
         // Hide submit button for show modal
         $('#btn-submit-form').hide();
     });
@@ -471,7 +471,7 @@ $(document).ready(function() {
     $(document).on('click', '.btn-edit-warehouse', function(e) {
         e.preventDefault();
         const warehouseId = $(this).data('warehouse-id');
-        Modal.load('warehouseModal', `/warehouses/${warehouseId}/edit`, 'Edit Gudang');
+        Modal.load('warehouseModal', `/warehouses/${warehouseId}/edit`, 'Edit Sekolah');
         // Show submit button for edit modal
         $('#btn-submit-form').show();
     });
@@ -499,7 +499,7 @@ $(document).ready(function() {
         const warehouseId = $(this).data('warehouse-id');
         const warehouseName = $(this).data('warehouse-name');
 
-        if (!confirm(`Apakah Anda yakin ingin menghapus gudang "${warehouseName}"?`)) {
+        if (!confirm(`Apakah Anda yakin ingin menghapus sekolah "${warehouseName}"?`)) {
             return;
         }
 
@@ -524,7 +524,7 @@ $(document).ready(function() {
                 }
             },
             error: function() {
-                Toast.error('Gagal menghapus gudang.');
+                Toast.error('Gagal menghapus sekolah.');
             }
         });
     });
@@ -714,7 +714,7 @@ $(document).ready(function() {
                         'accept-language': 'id'
                     },
                     headers: {
-                        'User-Agent': 'Warehouse Management System'
+                        'User-Agent': 'School Distribution System'
                     },
                     success: function(data) {
                         if (data && data.display_name) {

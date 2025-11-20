@@ -54,20 +54,15 @@ class StockController extends Controller
                     return $stock->location->full_path ?? '-';
                 })
                 ->addColumn('expired_status', function ($stock) {
-                    if (!$stock->expired_at) {
-                        return '<span class="badge bg-secondary">No Expiry</span>';
+                    if ($stock->expired_at && $stock->expired_at->isPast()) {
+                        return '<span class="badge bg-success">Sudah Dikirim</span>';
                     }
 
-                    if ($stock->expired_at->isPast()) {
-                        return '<span class="badge bg-danger">Expired</span>';
+                    if ($stock->expired_at && $stock->expired_at->isFuture()) {
+                        return '<span class="badge bg-danger">Belum Dikirim</span>';
                     }
 
-                    $daysUntilExpiry = $stock->expired_at->diffInDays(now());
-                    if ($daysUntilExpiry <= 30) {
-                        return '<span class="badge bg-warning">Expiring Soon (' . $daysUntilExpiry . ' days)</span>';
-                    }
-
-                    return '<span class="badge bg-success">Valid</span>';
+                    return '<span class="badge bg-danger">Belum Dikirim</span>';
                 })
                 ->addColumn('action', function ($stock) {
                     return view('features.stocks.partials.action-buttons', compact('stock'))->render();

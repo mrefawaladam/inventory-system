@@ -141,7 +141,7 @@
     </li>
     <li class="nav-item" role="presentation">
         <button class="nav-link" id="warehouse-activity-tab" data-bs-toggle="tab" data-bs-target="#warehouse-activity" type="button" role="tab">
-            <i class="ti ti-building-warehouse"></i> Warehouse Activity
+            <i class="ti ti-building-warehouse"></i> Aktivitas Sekolah
         </button>
     </li>
     <li class="nav-item" role="presentation">
@@ -192,7 +192,7 @@
     <div class="tab-pane fade" id="warehouse-activity" role="tabpanel">
         <div class="card">
             <div class="card-body">
-                <h5 class="card-title mb-4">Heatmap Warehouse Paling Aktif</h5>
+                <h5 class="card-title mb-4">Heatmap Sekolah Paling Aktif</h5>
                 <div class="intensity-legend">
                     <span class="fw-bold">Intensitas:</span>
                     <div class="intensity-legend-item">
@@ -227,7 +227,7 @@
                     <h5 class="card-title mb-0">Visualisasi Traffic Perpindahan</h5>
                     <div class="btn-group" role="group">
                         <input type="radio" class="btn-check" name="traffic-type" id="traffic-warehouse" value="warehouse" checked>
-                        <label class="btn btn-outline-primary" for="traffic-warehouse">Warehouse</label>
+                        <label class="btn btn-outline-primary" for="traffic-warehouse">Sekolah</label>
 
                         <input type="radio" class="btn-check" name="traffic-type" id="traffic-location" value="location">
                         <label class="btn btn-outline-primary" for="traffic-location">Location</label>

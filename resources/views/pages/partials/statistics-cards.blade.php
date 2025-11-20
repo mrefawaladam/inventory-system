@@ -28,7 +28,7 @@
             </div>
           </div>
           <div class="flex-grow-1 ms-3">
-            <h6 class="text-muted mb-1">Total Warehouses</h6>
+            <h6 class="text-muted mb-1">Total Sekolah</h6>
             <h3 class="mb-0">{{ number_format($totalWarehouses, 0, ',', '.') }}</h3>
           </div>
         </div>

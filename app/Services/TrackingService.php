@@ -97,6 +97,11 @@ class TrackingService
         $toLat = $toWarehouse?->latitude;
         $toLng = $toWarehouse?->longitude;
 
+        $deliveryStatus = match ($transaction->type) {
+            TransactionType::OUTBOUND => 'pending',
+            default => 'delivered',
+        };
+
         // For INBOUND: only to_location
         // For OUTBOUND: only from_location
         // For TRANSFER: both locations
@@ -142,6 +147,8 @@ class TrackingService
             'created_at' => $transaction->created_at->format('Y-m-d H:i:s'),
             'created_at_formatted' => $transaction->created_at->format('d M Y H:i'),
             'notes' => $transaction->notes,
+            'delivery_status' => $deliveryStatus,
+            'delivery_status_label' => $deliveryStatus === 'delivered' ? 'Sudah Dikirim' : 'Belum Dikirim',
             'from' => [
                 'warehouse_id' => $fromWarehouse?->id,
                 'warehouse_name' => $fromWarehouse?->name,

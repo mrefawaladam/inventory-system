@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Item Movement History')
+@section('title', 'History Pengiriman Item')
 
 @push('styles')
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -52,8 +52,8 @@
 
 @section('content')
 <x-layout.page-header
-    title="Item Movement History"
-    :breadcrumb-title="'Item Movement History'"
+    title="History Pengiriman Item"
+    :breadcrumb-title="'History Pengiriman Item'"
 />
 
 <!-- Toast Notification -->
@@ -66,13 +66,13 @@
             <li class="nav-item">
                 <a class="nav-link" href="{{ route('tracking.index') }}">
                     <iconify-icon icon="solar:map-point-search-line-duotone" class="me-1"></iconify-icon>
-                    Route Visualization
+                    Tracking Pengiriman
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link active" href="{{ route('tracking.item-history') }}">
                     <iconify-icon icon="solar:history-line-duotone" class="me-1"></iconify-icon>
-                    Item Movement History
+                    History Pengiriman Item
                 </a>
             </li>
         </ul>

@@ -58,13 +58,13 @@
 
 <!-- Stock by Warehouse -->
 <div class="mb-4">
-    <h5 class="mb-3">Stok per Gudang</h5>
+    <h5 class="mb-3">Stok per Sekolah</h5>
     @if($stockByWarehouse->count() > 0)
         <div class="table-responsive">
             <table class="table table-bordered table-striped">
                 <thead>
                     <tr>
-                        <th>Gudang</th>
+                        <th>Sekolah</th>
                         <th class="text-end">Total Stok</th>
                     </tr>
                 </thead>
@@ -93,7 +93,7 @@
             <table class="table table-bordered table-striped">
                 <thead>
                     <tr>
-                        <th>Gudang</th>
+                        <th>Sekolah</th>
                         <th>Lokasi</th>
                         <th>Path Lengkap</th>
                         <th class="text-end">Quantity</th>

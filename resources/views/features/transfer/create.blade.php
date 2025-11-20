@@ -56,10 +56,10 @@
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title mb-4">Form Transaksi Transfer</h5>
-                
+
                 <form id="transfer-form" action="{{ route('transfer.store') }}" method="POST">
                     @csrf
-                    
+
                     <!-- Item Barcode Scanner -->
                     <div class="mb-4">
                         <label class="form-label fw-bold">Scan Barcode Item</label>
@@ -122,15 +122,15 @@
 
                     <!-- To Location Scanner -->
                     <div class="mb-4">
-                        <label class="form-label fw-bold">Scan Lokasi Tujuan</label>
+                        <label class="form-label fw-bold">Scan Sekolah Tujuan</label>
                         <div id="to-scanner-container">
                             <div id="to-reader"></div>
                             <div id="to-scanner-status" class="scanner-status inactive text-center">
-                                <i class="ti ti-camera"></i> Scan barcode lokasi tujuan
+                            <i class="ti ti-camera"></i> Scan barcode sekolah tujuan
                             </div>
                             <div class="d-flex gap-2 mt-2">
                                 <button type="button" class="btn btn-primary" id="btn-start-to-scanner" disabled>
-                                    <i class="ti ti-camera"></i> Scan Lokasi Tujuan
+                                    <i class="ti ti-camera"></i> Scan Sekolah Tujuan
                                 </button>
                                 <button type="button" class="btn btn-secondary" id="btn-stop-to-scanner" style="display: none;">
                                     <i class="ti ti-camera-off"></i> Stop
@@ -141,7 +141,7 @@
                             </div>
                         </div>
                         <div id="to-location-info" class="location-info success" style="display: none;">
-                            <strong>Lokasi Tujuan:</strong> <span id="to-location-path"></span>
+                            <strong>Sekolah Tujuan:</strong> <span id="to-location-path"></span>
                         </div>
                         <input type="hidden" id="to_location_id" name="to_location_id" required>
                     </div>

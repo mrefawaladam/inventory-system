@@ -15,25 +15,25 @@ class WarehouseSeeder extends Seeder
     {
         $warehouses = [
             [
-                'name' => 'Gudang Pusat Jakarta',
+                'name' => 'Sekolah Pusat Jakarta',
                 'address' => 'Jl. Raya Bekasi Km 25, Cakung, Jakarta Timur',
                 'latitude' => -6.2088,
                 'longitude' => 106.8456,
-                'description' => 'Gudang utama untuk distribusi wilayah Jakarta dan sekitarnya',
+                'description' => 'Sekolah utama untuk distribusi wilayah Jakarta dan sekitarnya',
             ],
             [
-                'name' => 'Gudang Bandung',
+                'name' => 'Sekolah Bandung',
                 'address' => 'Jl. Soekarno Hatta No. 500, Bandung',
                 'latitude' => -6.9175,
                 'longitude' => 107.6191,
-                'description' => 'Gudang untuk distribusi wilayah Jawa Barat',
+                'description' => 'Sekolah untuk distribusi wilayah Jawa Barat',
             ],
             [
-                'name' => 'Gudang Surabaya',
+                'name' => 'Sekolah Surabaya',
                 'address' => 'Jl. Raya Gresik Km 10, Surabaya',
                 'latitude' => -7.2575,
                 'longitude' => 112.7521,
-                'description' => 'Gudang untuk distribusi wilayah Jawa Timur',
+                'description' => 'Sekolah untuk distribusi wilayah Jawa Timur',
             ],
         ];
 
@@ -52,7 +52,7 @@ class WarehouseSeeder extends Seeder
         // Generate additional random warehouses
         for ($i = 0; $i < 2; $i++) {
             DB::table('warehouses')->insert([
-                'name' => 'Gudang ' . fake()->city(),
+                'name' => 'Sekolah ' . fake()->city(),
                 'address' => fake()->address(),
                 'latitude' => fake()->latitude(-6.5, -7.5),
                 'longitude' => fake()->longitude(106.0, 112.0),

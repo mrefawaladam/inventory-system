@@ -73,16 +73,6 @@
             -webkit-overflow-scrolling: touch;
         }
     }
-    .badge-zone {
-        background-color: #0d6efd;
-    }
-    .badge-rack {
-        background-color: #ffc107;
-        color: #000;
-    }
-    .badge-slot {
-        background-color: #198754;
-    }
 </style>
 @endpush
 
@@ -100,21 +90,20 @@
     <div class="card-body">
         <div class="row g-3">
             <div class="col-md-4">
-                <label for="filter-warehouse" class="form-label">Filter Gudang</label>
+                <label for="filter-warehouse" class="form-label">Filter Sekolah</label>
                 <select id="filter-warehouse" class="form-select">
-                    <option value="">Semua Gudang</option>
+                    <option value="">Semua Sekolah</option>
                     @foreach($warehouses as $warehouse)
                         <option value="{{ $warehouse->id }}">{{ $warehouse->name }}</option>
                     @endforeach
                 </select>
             </div>
             <div class="col-md-4">
-                <label for="filter-type" class="form-label">Filter Tipe</label>
-                <select id="filter-type" class="form-select">
-                    <option value="">Semua Tipe</option>
-                    <option value="ZONE">Zone</option>
-                    <option value="RACK">Rack</option>
-                    <option value="SLOT">Slot</option>
+                <label for="filter-delivery-status" class="form-label">Status Pengiriman</label>
+                <select id="filter-delivery-status" class="form-select">
+                    <option value="">Semua Status</option>
+                    <option value="delivered">Sudah Dikirim</option>
+                    <option value="pending">Belum Dikirim</option>
                 </select>
             </div>
             <div class="col-md-4 d-flex align-items-end">
@@ -147,11 +136,11 @@
                         <tr>
                             <th style="min-width: 60px;">ID</th>
                             <th style="min-width: 120px;">Kode</th>
-                            <th style="min-width: 100px;">Tipe</th>
-                            <th style="min-width: 150px;">Gudang</th>
+                            <th style="min-width: 140px;">Status Pengiriman</th>
+                            <th style="min-width: 150px;">Sekolah</th>
                             <th style="min-width: 120px;">Parent</th>
                             <th style="min-width: 200px;">Path Lengkap</th>
-                            <th style="min-width: 100px;">Kapasitas</th>
+                            <th style="min-width: 100px;">Jumlah Siswa yang Menerima</th>
                             <th style="min-width: 120px;">Tanggal Dibuat</th>
                             <th style="min-width: 120px;">Aksi</th>
                         </tr>
@@ -192,21 +181,13 @@ $(document).ready(function() {
             url: "{{ route('locations.index') }}",
             data: function(d) {
                 d.warehouse_id = $('#filter-warehouse').val();
-                d.type = $('#filter-type').val();
+                d.delivery_status = $('#filter-delivery-status').val();
             }
         },
         columns: [
             { data: 'id', name: 'id' },
             { data: 'code', name: 'code' },
-            { 
-                data: 'type_label', 
-                name: 'type',
-                render: function(data, type, row) {
-                    const badgeClass = row.type === 'ZONE' ? 'badge-zone' : 
-                                      row.type === 'RACK' ? 'badge-rack' : 'badge-slot';
-                    return '<span class="badge ' + badgeClass + '">' + data + '</span>';
-                }
-            },
+            { data: 'delivery_status', name: 'delivery_status', orderable: false, searchable: false },
             { data: 'warehouse_name', name: 'warehouse.name' },
             { data: 'parent_code', name: 'parent.code' },
             { data: 'full_path', name: 'full_path', orderable: false },
@@ -238,13 +219,13 @@ $(document).ready(function() {
     });
 
     // Filter handlers
-    $('#filter-warehouse, #filter-type').on('change', function() {
+    $('#filter-warehouse, #filter-delivery-status').on('change', function() {
         locationsTable.ajax.reload();
     });
 
     $('#btn-reset-filters').on('click', function() {
         $('#filter-warehouse').val('');
-        $('#filter-type').val('');
+        $('#filter-delivery-status').val('');
         locationsTable.ajax.reload();
     });
 

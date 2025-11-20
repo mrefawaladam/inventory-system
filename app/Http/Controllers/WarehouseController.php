@@ -62,7 +62,7 @@ class WarehouseController extends Controller
                 'warehouse' => null,
                 'formAction' => route('warehouses.store'),
                 'formMethod' => 'POST',
-                'modalTitle' => 'Create New Warehouse'
+                'modalTitle' => 'Tambah Sekolah'
             ])->render()
         ]);
     }
@@ -79,13 +79,13 @@ class WarehouseController extends Controller
 
             if ($request->ajax()) {
                 return response()->json([
-                    'success' => true,
-                    'message' => 'Gudang berhasil dibuat.'
+                'success' => true,
+                'message' => 'Sekolah berhasil ditambahkan.'
                 ]);
             }
 
             return redirect()->route('warehouses.index')
-                ->with('success', 'Gudang berhasil dibuat.');
+                ->with('success', 'Sekolah berhasil ditambahkan.');
         } catch (\Illuminate\Validation\ValidationException $e) {
             if ($request->ajax()) {
                 return response()->json([
@@ -125,7 +125,7 @@ class WarehouseController extends Controller
                 'warehouse' => $warehouse,
                 'formAction' => route('warehouses.update', $warehouse),
                 'formMethod' => 'PUT',
-                'modalTitle' => 'Edit Warehouse'
+                'modalTitle' => 'Edit Sekolah'
             ])->render()
         ]);
     }
@@ -142,13 +142,13 @@ class WarehouseController extends Controller
 
             if ($request->ajax()) {
                 return response()->json([
-                    'success' => true,
-                    'message' => 'Gudang berhasil diperbarui.'
+                'success' => true,
+                'message' => 'Sekolah berhasil diperbarui.'
                 ]);
             }
 
             return redirect()->route('warehouses.index')
-                ->with('success', 'Gudang berhasil diperbarui.');
+                ->with('success', 'Sekolah berhasil diperbarui.');
         } catch (\Illuminate\Validation\ValidationException $e) {
             if ($request->ajax()) {
                 return response()->json([
@@ -174,12 +174,12 @@ class WarehouseController extends Controller
         if (request()->ajax()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Gudang berhasil dihapus.'
+                'message' => 'Sekolah berhasil dihapus.'
             ]);
         }
 
         return redirect()->route('warehouses.index')
-            ->with('success', 'Gudang berhasil dihapus.');
+            ->with('success', 'Sekolah berhasil dihapus.');
     }
 }
 

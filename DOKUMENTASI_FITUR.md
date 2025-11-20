@@ -1,8 +1,8 @@
-# Dokumentasi Fitur Aplikasi Sistem Manajemen Gudang
+# Dokumentasi Fitur Aplikasi Sistem Manajemen Sekolah
 
 ## Deskripsi Umum
 
-Aplikasi Sistem Manajemen Gudang adalah aplikasi berbasis web yang dirancang untuk mengelola operasional gudang secara komprehensif. Aplikasi ini memungkinkan pengguna untuk mengelola barang, stok, lokasi penyimpanan, transaksi masuk/keluar, transfer barang, serta melakukan analisis dan pelacakan pergerakan barang di gudang.
+Aplikasi Sistem Manajemen Sekolah adalah aplikasi berbasis web yang dirancang untuk mengelola operasional gudang secara komprehensif. Aplikasi ini memungkinkan pengguna untuk mengelola barang, stok, lokasi penyimpanan, transaksi masuk/keluar, transfer barang, serta melakukan analisis dan pelacakan pergerakan barang di gudang.
 
 ---
 
@@ -25,15 +25,15 @@ Aplikasi Sistem Manajemen Gudang adalah aplikasi berbasis web yang dirancang unt
 
 ---
 
-## 2. Manajemen Gudang
+## 2. Manajemen Sekolah
 
-### 2.1 Fitur Gudang
-- **Daftar Gudang**: Melihat semua gudang yang terdaftar dalam sistem
-- **Tambah Gudang**: Menambahkan gudang baru dengan informasi lengkap (nama, alamat, koordinat)
-- **Edit Gudang**: Memperbarui informasi gudang yang sudah ada
-- **Hapus Gudang**: Menghapus gudang dari sistem
-- **Peta Gudang**: Visualisasi lokasi gudang pada peta menggunakan koordinat latitude dan longitude
-- **Detail Gudang**: Melihat informasi lengkap tentang gudang termasuk statistik lokasi dan stok
+### 2.1 Fitur Sekolah
+- **Daftar Sekolah**: Melihat semua gudang yang terdaftar dalam sistem
+- **Tambah Sekolah**: Menambahkan gudang baru dengan informasi lengkap (nama, alamat, koordinat)
+- **Edit Sekolah**: Memperbarui informasi gudang yang sudah ada
+- **Hapus Sekolah**: Menghapus gudang dari sistem
+- **Peta Sekolah**: Visualisasi lokasi gudang pada peta menggunakan koordinat latitude dan longitude
+- **Detail Sekolah**: Melihat informasi lengkap tentang gudang termasuk statistik lokasi dan stok
 
 ---
 
@@ -141,7 +141,7 @@ Aplikasi Sistem Manajemen Gudang adalah aplikasi berbasis web yang dirancang unt
 
 ### 9.1 Statistik Umum
 - **Total Barang**: Jumlah total barang yang terdaftar
-- **Total Gudang**: Jumlah total gudang
+- **Total Sekolah**: Jumlah total gudang
 - **Total Lokasi**: Jumlah total lokasi penyimpanan
 - **Total Stok**: Jumlah total stok di semua gudang
 - **Total Transaksi**: Jumlah total transaksi yang pernah dilakukan
@@ -170,9 +170,9 @@ Aplikasi Sistem Manajemen Gudang adalah aplikasi berbasis web yang dirancang unt
 - **Jumlah Pergerakan**: Menampilkan jumlah pergerakan dan total quantity
 
 ### 10.2 Warehouse Activity Heatmap
-- **Aktivitas Gudang**: Menampilkan gudang dengan aktivitas transaksi tertinggi
+- **Aktivitas Sekolah**: Menampilkan gudang dengan aktivitas transaksi tertinggi
 - **Filter Tanggal**: Filter data berdasarkan rentang tanggal
-- **Statistik Gudang**: Jumlah transaksi, total quantity, dan jumlah item unik per gudang
+- **Statistik Sekolah**: Jumlah transaksi, total quantity, dan jumlah item unik per gudang
 - **Intensitas Warna**: Warna menunjukkan tingkat aktivitas gudang
 
 ### 10.3 Traffic Visualization
@@ -278,5 +278,5 @@ Aplikasi Sistem Manajemen Gudang adalah aplikasi berbasis web yang dirancang unt
 
 ## Kesimpulan
 
-Aplikasi Sistem Manajemen Gudang ini menyediakan solusi lengkap untuk mengelola operasional gudang, mulai dari manajemen barang dan stok, transaksi masuk/keluar, transfer barang, hingga analisis dan pelacakan pergerakan barang. Dengan fitur-fitur yang komprehensif dan antarmuka yang user-friendly, aplikasi ini dapat meningkatkan efisiensi dan akurasi dalam pengelolaan gudang.
+Aplikasi Sistem Manajemen Sekolah ini menyediakan solusi lengkap untuk mengelola operasional gudang, mulai dari manajemen barang dan stok, transaksi masuk/keluar, transfer barang, hingga analisis dan pelacakan pergerakan barang. Dengan fitur-fitur yang komprehensif dan antarmuka yang user-friendly, aplikasi ini dapat meningkatkan efisiensi dan akurasi dalam pengelolaan gudang.
 

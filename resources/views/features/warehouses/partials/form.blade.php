@@ -37,8 +37,8 @@
     </div>
 
     <div class="mb-3">
-        <label class="form-label">Lokasi di Peta <span class="text-danger">*</span></label>
-        <p class="text-muted small mb-2">Cari lokasi atau klik pada peta untuk mengatur lokasi gudang</p>
+        <label class="form-label">Titik Lokasi Sekolah di Peta <span class="text-danger">*</span></label>
+        <p class="text-muted small mb-2">Cari alamat jalan atau klik pada peta untuk mengatur lokasi sekolah</p>
 
         <!-- Search Box -->
         <div class="position-relative mb-2">
@@ -47,7 +47,7 @@
                     type="text"
                     class="form-control"
                     id="location-search"
-                    placeholder="Cari lokasi (contoh: Jakarta, Bandung, Surabaya)..."
+                    placeholder="Cari alamat sekolah (contoh: Jln Sudirman, Kel. ABC)..."
                 >
                 <button class="btn btn-outline-primary" type="button" id="btn-search-location">
                     <i class="ti ti-search"></i> Cari

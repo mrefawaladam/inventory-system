@@ -86,9 +86,9 @@
 
                     <!-- Warehouse Selection -->
                     <div class="mb-3">
-                        <label for="warehouse_id" class="form-label">Gudang <span class="text-danger">*</span></label>
+                        <label for="warehouse_id" class="form-label">Sekolah <span class="text-danger">*</span></label>
                         <select class="form-select" id="warehouse_id" name="warehouse_id" required>
-                            <option value="">Pilih Gudang</option>
+                            <option value="">Pilih Sekolah</option>
                             @foreach($warehouses as $warehouse)
                                 <option value="{{ $warehouse->id }}">{{ $warehouse->name }}</option>
                             @endforeach
@@ -98,9 +98,9 @@
 
                     <!-- Location Selection -->
                     <div class="mb-3">
-                        <label for="to_location_id" class="form-label">Lokasi Tujuan <span class="text-danger">*</span></label>
+                        <label for="to_location_id" class="form-label">Alamat Jalan / Kelurahan <span class="text-danger">*</span></label>
                         <select class="form-select" id="to_location_id" name="to_location_id" required disabled>
-                            <option value="">Pilih Gudang terlebih dahulu</option>
+                            <option value="">Pilih Sekolah terlebih dahulu</option>
                         </select>
                         <div class="invalid-feedback d-none" id="to_location_id-error"></div>
                     </div>
@@ -259,7 +259,7 @@ $(document).ready(function() {
         locationSelect.prop('disabled', true).html('<option value="">Memuat lokasi...</option>');
 
         if (!warehouseId) {
-            locationSelect.html('<option value="">Pilih Gudang terlebih dahulu</option>');
+            locationSelect.html('<option value="">Pilih Sekolah terlebih dahulu</option>');
             return;
         }
 

@@ -24,6 +24,9 @@ class LocationController extends Controller
     {
         if ($request->ajax()) {
             $query = Location::with(['warehouse', 'parent'])
+                ->withSum(['stocks as delivered_stock_quantity' => function ($stockQuery) {
+                    $stockQuery->where('quantity', '>', 0);
+                }], 'quantity')
                 ->select('locations.*');
 
             // Filter by warehouse if provided
@@ -31,9 +34,17 @@ class LocationController extends Controller
                 $query->where('warehouse_id', $request->warehouse_id);
             }
 
-            // Filter by type if provided
-            if ($request->has('type') && $request->type) {
-                $query->where('type', $request->type);
+            // Filter by delivery status if provided
+            if ($request->has('delivery_status') && $request->delivery_status) {
+                if ($request->delivery_status === 'delivered') {
+                    $query->whereHas('stocks', function ($stockQuery) {
+                        $stockQuery->where('quantity', '>', 0);
+                    });
+                } elseif ($request->delivery_status === 'pending') {
+                    $query->whereDoesntHave('stocks', function ($stockQuery) {
+                        $stockQuery->where('quantity', '>', 0);
+                    });
+                }
             }
 
             return DataTables::of($query)
@@ -43,8 +54,11 @@ class LocationController extends Controller
                 ->addColumn('parent_code', function ($location) {
                     return $location->parent->code ?? '-';
                 })
-                ->addColumn('type_label', function ($location) {
-                    return $location->type->label();
+                ->addColumn('delivery_status', function ($location) {
+                    $hasDelivered = ($location->delivered_stock_quantity ?? 0) > 0;
+                    $badgeClass = $hasDelivered ? 'bg-success' : 'bg-danger';
+                    $label = $hasDelivered ? 'Sudah Dikirim' : 'Belum Dikirim';
+                    return '<span class="badge ' . $badgeClass . '">' . $label . '</span>';
                 })
                 ->addColumn('full_path', function ($location) {
                     return $location->full_path;
@@ -55,7 +69,7 @@ class LocationController extends Controller
                 ->editColumn('created_at', function ($location) {
                     return $location->created_at->format('Y-m-d');
                 })
-                ->rawColumns(['action'])
+                ->rawColumns(['delivery_status', 'action'])
                 ->make(true);
         }
 

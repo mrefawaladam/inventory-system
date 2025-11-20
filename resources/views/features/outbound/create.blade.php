@@ -97,15 +97,15 @@
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title mb-4">Form Transaksi Outbound</h5>
-                
+
                 <form id="outbound-form" action="{{ route('outbound.store') }}" method="POST">
                     @csrf
-                    
-                    <!-- Warehouse Selection -->
+
+                    <!-- Sekolah Selection -->
                     <div class="mb-3">
-                        <label for="warehouse_id" class="form-label">Gudang <span class="text-danger">*</span></label>
+                        <label for="warehouse_id" class="form-label">Sekolah <span class="text-danger">*</span></label>
                         <select class="form-select" id="warehouse_id" name="warehouse_id" required>
-                            <option value="">Pilih Gudang</option>
+                            <option value="">Pilih Sekolah</option>
                             @foreach($warehouses as $warehouse)
                                 <option value="{{ $warehouse->id }}">{{ $warehouse->name }}</option>
                             @endforeach
@@ -115,9 +115,9 @@
 
                     <!-- Location Selection -->
                     <div class="mb-3">
-                        <label for="from_location_id" class="form-label">Lokasi Sumber <span class="text-danger">*</span></label>
+                        <label for="from_location_id" class="form-label">Alamat Jalan / Kelurahan <span class="text-danger">*</span></label>
                         <select class="form-select" id="from_location_id" name="from_location_id" required disabled>
-                            <option value="">Pilih Gudang terlebih dahulu</option>
+                            <option value="">Pilih sekolah terlebih dahulu</option>
                         </select>
                         <div class="invalid-feedback d-none" id="from_location_id-error"></div>
                     </div>
@@ -333,10 +333,10 @@ $(document).ready(function() {
                         let html = '';
                         response.items.forEach(function(item) {
                             const stockClass = item.available_stock > 0 ? 'available' : 'insufficient';
-                            const stockText = item.available_stock > 0 
-                                ? `Stok: ${item.available_stock} ${item.unit || ''}` 
+                            const stockText = item.available_stock > 0
+                                ? `Stok: ${item.available_stock} ${item.unit || ''}`
                                 : 'Stok: 0 (Tidak tersedia)';
-                            
+
                             html += `
                                 <div class="item-search-result" data-item-id="${item.id}" data-item-name="${item.name}" data-item-sku="${item.sku}" data-item-barcode="${item.barcode}" data-item-stock="${item.available_stock}">
                                     <div class="item-name">${item.name}</div>
@@ -411,7 +411,7 @@ $(document).ready(function() {
         $.ajax({
             url: "{{ route('outbound.getItemByBarcode') }}",
             method: 'GET',
-            data: { 
+            data: {
                 barcode: barcode,
                 location_id: currentLocationId
             },
@@ -424,7 +424,7 @@ $(document).ready(function() {
                     $('#available-stock').text(response.item.available_stock);
                     $('#item-info').show();
                     $('#stock-info').show();
-                    
+
                     if (response.item.available_stock > 0) {
                         $('#stock-info').removeClass('insufficient').addClass('available');
                         $('#quantity').attr('max', response.item.available_stock);
@@ -432,7 +432,7 @@ $(document).ready(function() {
                         $('#stock-info').removeClass('available').addClass('insufficient');
                         $('#quantity').attr('max', 0);
                     }
-                    
+
                     Toast.success('Item berhasil ditemukan!');
                 }
             },
@@ -447,13 +447,13 @@ $(document).ready(function() {
     $('#warehouse_id').on('change', function() {
         const warehouseId = $(this).val();
         const locationSelect = $('#from_location_id');
-        
+
         locationSelect.prop('disabled', true).html('<option value="">Memuat lokasi...</option>');
         $('#btn-start-scanner, #btn-manual-input').prop('disabled', true);
         currentLocationId = null;
 
         if (!warehouseId) {
-            locationSelect.html('<option value="">Pilih Gudang terlebih dahulu</option>');
+            locationSelect.html('<option value="">Pilih sekolah terlebih dahulu</option>');
             return;
         }
 

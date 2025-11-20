@@ -7,6 +7,11 @@
         <div class="timeline-container" id="timeline-container">
             @if(count($history) > 0)
                 @foreach($history as $index => $movement)
+                    @php
+                        $status = $movement['delivery_status'] ?? 'pending';
+                        $statusLabel = $movement['delivery_status_label'] ?? ($status === 'delivered' ? 'Sudah Dikirim' : 'Belum Dikirim');
+                        $statusClass = $status === 'delivered' ? 'success' : 'danger';
+                    @endphp
                     <div class="timeline-item {{ strtolower($movement['type']) }}"
                          data-sequence="{{ $movement['sequence'] }}"
                          data-route-id="{{ $movement['id'] }}">
@@ -15,9 +20,12 @@
                                 <strong class="d-block">{{ $movement['transaction_code'] }}</strong>
                                 <small class="text-muted">{{ $movement['created_at_formatted'] }}</small>
                             </div>
-                            <span class="badge bg-{{ $movement['type'] == 'INBOUND' ? 'warning' : ($movement['type'] == 'OUTBOUND' ? 'secondary' : 'primary') }}">
-                                {{ $movement['type_label'] }}
-                            </span>
+                            <div class="text-end">
+                                <span class="badge bg-{{ $movement['type'] == 'INBOUND' ? 'warning' : ($movement['type'] == 'OUTBOUND' ? 'secondary' : 'primary') }}">
+                                    {{ $movement['type_label'] }}
+                                </span>
+                                <span class="badge bg-{{ $statusClass }} ms-1">{{ $statusLabel }}</span>
+                            </div>
                         </div>
                         <div class="mb-2">
                             <small class="text-muted d-block">Dari:</small>

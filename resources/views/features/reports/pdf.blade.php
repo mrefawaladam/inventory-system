@@ -104,7 +104,8 @@
                 <th>Jumlah</th>
                 <th>Batch</th>
                 <th>User</th>
-                <th>Tanggal</th>
+                <th>Tanggal Pengiriman</th>
+                <th>Tanggal Terima</th>
             </tr>
         </thead>
         <tbody>
@@ -133,17 +134,18 @@
                 <td>{{ $transaction->batch ?? '-' }}</td>
                 <td>{{ $transaction->user->name ?? '-' }}</td>
                 <td>{{ $transaction->created_at->format('d/m/Y H:i') }}</td>
+                <td>{{ $transaction->updated_at ? $transaction->updated_at->format('d/m/Y H:i') : '-' }}</td>
             </tr>
             @empty
             <tr>
-                <td colspan="11" style="text-align: center;">Tidak ada data transaksi</td>
+                <td colspan="12" style="text-align: center;">Tidak ada data transaksi</td>
             </tr>
             @endforelse
         </tbody>
     </table>
 
     <div class="footer">
-        <p>Laporan ini dibuat secara otomatis oleh Sistem Manajemen Gudang</p>
+        <p>Laporan ini dibuat secara otomatis oleh Sistem Manajemen Sekolah</p>
         <p>Halaman 1</p>
     </div>
 

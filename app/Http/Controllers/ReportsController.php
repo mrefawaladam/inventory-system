@@ -44,8 +44,11 @@ class ReportsController extends Controller
                 ->addColumn('user_name', function ($transaction) {
                     return $transaction->user->name ?? '-';
                 })
-                ->editColumn('created_at', function ($transaction) {
-                    return $transaction->created_at->format('Y-m-d H:i:s');
+                ->addColumn('shipped_at', function ($transaction) {
+                    return $transaction->created_at ? $transaction->created_at->format('Y-m-d H:i:s') : '-';
+                })
+                ->addColumn('received_at', function ($transaction) {
+                    return $transaction->updated_at ? $transaction->updated_at->format('Y-m-d H:i:s') : '-';
                 })
                 ->make(true);
         }
@@ -84,7 +87,8 @@ class ReportsController extends Controller
                 'Jumlah',
                 'Batch',
                 'User',
-                'Tanggal',
+                'Tanggal Pengiriman',
+                'Tanggal Terima',
                 'Catatan'
             ]);
 
@@ -101,6 +105,7 @@ class ReportsController extends Controller
                     $transaction->batch ?? '-',
                     $transaction->user->name ?? '-',
                     $transaction->created_at->format('Y-m-d H:i:s'),
+                    $transaction->updated_at ? $transaction->updated_at->format('Y-m-d H:i:s') : '-',
                     $transaction->notes ?? '-'
                 ]);
             }

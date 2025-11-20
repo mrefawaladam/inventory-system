@@ -156,13 +156,13 @@
                             <th>ID</th>
                             <th>Barang</th>
                             <th>SKU</th>
-                            <th>Gudang</th>
+                            <th>Sekolah</th>
                             <th>Lokasi</th>
                             <th>Path</th>
                             <th>Quantity</th>
                             <th>Batch</th>
-                            <th>Expired At</th>
-                            <th>Status</th>
+                            <th>Tanggal Pengiriman</th>
+                            <th>Status Pengiriman</th>
                             <th>Tanggal Dibuat</th>
                             <th>Aksi</th>
                         </tr>
