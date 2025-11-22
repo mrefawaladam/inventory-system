@@ -232,5 +232,88 @@ class TransferController extends Controller
             'locations' => $locations,
         ]);
     }
+
+    /**
+     * Search items by name, SKU, or barcode
+     */
+    public function searchItems(Request $request)
+    {
+        $query = $request->input('query');
+
+        if (empty($query) || strlen($query) < 2) {
+            return response()->json([
+                'success' => true,
+                'items' => [],
+            ]);
+        }
+
+        // Search items by name, SKU, or barcode
+        $items = Item::where(function ($q) use ($query) {
+                $q->where('name', 'like', '%' . $query . '%')
+                  ->orWhere('sku', 'like', '%' . $query . '%')
+                  ->orWhere('barcode', 'like', '%' . $query . '%');
+            })
+            ->limit(20)
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'name' => $item->name,
+                    'sku' => $item->sku,
+                    'barcode' => $item->barcode,
+                    'unit' => $item->unit,
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'items' => $items,
+        ]);
+    }
+
+    /**
+     * Search locations by code, path, or warehouse name
+     */
+    public function searchLocations(Request $request)
+    {
+        $query = $request->input('query');
+
+        if (empty($query) || strlen($query) < 2) {
+            return response()->json([
+                'success' => true,
+                'locations' => [],
+            ]);
+        }
+
+        // Search locations by code, path, or warehouse name
+        $locations = Location::where('type', 'SLOT')
+            ->with(['warehouse', 'parent'])
+            ->where(function ($q) use ($query) {
+                $q->where('code', 'like', '%' . $query . '%')
+                  ->orWhereHas('warehouse', function ($wq) use ($query) {
+                      $wq->where('name', 'like', '%' . $query . '%');
+                  });
+            })
+            ->limit(20)
+            ->get()
+            ->map(function ($location) {
+                $path = $location->code;
+                if ($location->parent) {
+                    $path = $location->parent->code . ' > ' . $path;
+                }
+                return [
+                    'id' => $location->id,
+                    'code' => $location->code,
+                    'path' => $path,
+                    'warehouse_name' => $location->warehouse->name ?? '',
+                    'full_path' => ($location->warehouse->name ?? '') . ' - ' . $path,
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'locations' => $locations,
+        ]);
+    }
 }
 

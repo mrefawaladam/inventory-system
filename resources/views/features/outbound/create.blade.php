@@ -101,6 +101,18 @@
                 <form id="outbound-form" action="{{ route('outbound.store') }}" method="POST">
                     @csrf
 
+                    <!-- Customer Selection -->
+                    <div class="mb-3">
+                        <label for="customer_id" class="form-label">Customer <span class="text-danger">*</span></label>
+                        <select class="form-select" id="customer_id" name="customer_id" required>
+                            <option value="">Pilih Customer</option>
+                            @foreach($customers as $customer)
+                                <option value="{{ $customer->id }}">{{ $customer->name }}</option>
+                            @endforeach
+                        </select>
+                        <div class="invalid-feedback d-none" id="customer_id-error"></div>
+                    </div>
+
                     <!-- Sekolah Selection -->
                     <div class="mb-3">
                         <label for="warehouse_id" class="form-label">Sekolah <span class="text-danger">*</span></label>
@@ -207,6 +219,27 @@
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
     </x-slot>
 </x-ui.modal>
+
+<!-- Modal for Manual Location Input -->
+<x-ui.modal
+    id="locationSearchModal"
+    title="Cari Lokasi"
+    size="lg"
+>
+    <div class="mb-3">
+        <label for="location-search-input" class="form-label">Cari berdasarkan Kode Lokasi, Path, atau Nama Sekolah</label>
+        <input type="text" class="form-control" id="location-search-input" placeholder="Ketik untuk mencari lokasi..." autocomplete="off">
+        <small class="text-muted">Minimal 2 karakter</small>
+    </div>
+    <div id="location-search-results" style="max-height: 400px; overflow-y: auto;">
+        <div class="text-center text-muted py-4">
+            <i class="ti ti-search"></i> Mulai ketik untuk mencari lokasi
+        </div>
+    </div>
+    <x-slot name="footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+    </x-slot>
+</x-ui.modal>
 @endsection
 
 @push('scripts')
@@ -219,7 +252,29 @@
 <script src="{{ asset('assets/js/helpers/form.js') }}"></script>
 <script src="{{ asset('assets/js/helpers/modal.js') }}"></script>
 <script>
-$(document).ready(function() {
+// Wait for Select2 to be available
+(function() {
+    var checkSelect2 = function(attempts) {
+        attempts = attempts || 0;
+        if (typeof $.fn.select2 !== 'undefined') {
+            initOutboundPage();
+        } else if (attempts < 20) {
+            setTimeout(function() {
+                checkSelect2(attempts + 1);
+            }, 100);
+        } else {
+            // Try to load Select2 manually as fallback
+            var script = document.createElement('script');
+            script.src = "{{ asset('assets/libs/select2/dist/js/select2.min.js') }}";
+            script.onload = function() {
+                initOutboundPage();
+            };
+            document.head.appendChild(script);
+        }
+    };
+    
+    function initOutboundPage() {
+        $(document).ready(function() {
     let html5QrcodeScanner = null;
     let isScanning = false;
     let currentLocationId = null;
@@ -472,6 +527,26 @@ $(document).ready(function() {
                         );
                     });
                     locationSelect.prop('disabled', false);
+                    
+                    // Initialize or re-initialize Select2
+                    if (typeof $.fn.select2 !== 'undefined') {
+                        if (locationSelect.hasClass('select2-hidden-accessible')) {
+                            locationSelect.select2('destroy');
+                        }
+                        locationSelect.select2({
+                            placeholder: 'Pilih Lokasi',
+                            allowClear: true,
+                            width: '100%',
+                            language: {
+                                noResults: function() {
+                                    return "Tidak ada hasil";
+                                },
+                                searching: function() {
+                                    return "Mencari...";
+                                }
+                            }
+                        });
+                    }
                 }
             },
             error: function() {
@@ -479,6 +554,123 @@ $(document).ready(function() {
                 Toast.error('Gagal memuat lokasi');
             }
         });
+    });
+
+    // Initialize Select2 for location select on page load
+    $(document).ready(function() {
+        if (typeof $.fn.select2 !== 'undefined' && $('#from_location_id').length && !$('#from_location_id').prop('disabled')) {
+            $('#from_location_id').select2({
+                placeholder: 'Pilih Lokasi',
+                allowClear: true,
+                width: '100%',
+                language: {
+                    noResults: function() {
+                        return "Tidak ada hasil";
+                    },
+                    searching: function() {
+                        return "Mencari...";
+                    }
+                }
+            });
+        }
+    });
+
+    // Location search functionality
+    let locationSearchTimeout;
+    $('#location-search-input').on('input', function() {
+        const query = $(this).val().trim();
+        const resultsContainer = $('#location-search-results');
+
+        clearTimeout(locationSearchTimeout);
+
+        if (query.length < 2) {
+            resultsContainer.html('<div class="text-center text-muted py-4"><i class="ti ti-search"></i> Minimal 2 karakter untuk mencari</div>');
+            return;
+        }
+
+        // Show loading
+        resultsContainer.html('<div class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>');
+
+        locationSearchTimeout = setTimeout(function() {
+            $.ajax({
+                url: "{{ route('outbound.searchLocations') }}",
+                method: 'GET',
+                data: {
+                    query: query
+                },
+                success: function(response) {
+                    if (response.success && response.locations && response.locations.length > 0) {
+                        let html = '';
+                        response.locations.forEach(function(location) {
+                            html += `
+                                <div class="location-search-result p-3 border-bottom" 
+                                     data-location-id="${location.id}" 
+                                     data-location-code="${location.code}" 
+                                     data-location-path="${location.path}"
+                                     data-location-warehouse="${location.warehouse_name}"
+                                     style="cursor: pointer; transition: background-color 0.2s;"
+                                     onmouseover="this.style.backgroundColor='#f8f9fa'"
+                                     onmouseout="this.style.backgroundColor=''">
+                                    <div class="fw-bold">${location.full_path}</div>
+                                    <small class="text-muted">Kode: ${location.code}</small>
+                                </div>
+                            `;
+                        });
+                        resultsContainer.html(html);
+                    } else {
+                        resultsContainer.html('<div class="text-center text-muted py-4"><i class="ti ti-alert-circle"></i> Lokasi tidak ditemukan</div>');
+                    }
+                },
+                error: function(xhr) {
+                    const message = xhr.responseJSON?.message || 'Terjadi kesalahan saat mencari lokasi';
+                    resultsContainer.html(`<div class="alert alert-danger">${message}</div>`);
+                }
+            });
+        }, 300);
+    });
+
+    // Handle location selection
+    $(document).on('click', '#locationSearchModal .location-search-result', function() {
+        const locationId = $(this).data('location-id');
+        const locationCode = $(this).data('location-code');
+        const locationPath = $(this).data('location-path');
+        const warehouseName = $(this).data('location-warehouse');
+        
+        // Set location in select
+        $('#from_location_id').val(locationId).trigger('change');
+        
+        // Hide modal
+        Modal.hide('locationSearchModal');
+        
+        Toast.success('Lokasi berhasil dipilih!');
+    });
+
+    // Handle Enter key in location search input
+    $('#location-search-input').on('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const firstResult = $('#locationSearchModal .location-search-result').first();
+            if (firstResult.length) {
+                firstResult.click();
+            }
+        }
+    });
+
+    // Add button to open location search modal next to location select
+    $(document).ready(function() {
+        if ($('#from_location_id').length && !$('#from_location_id').next('.location-search-btn').length) {
+            const searchBtn = $('<button type="button" class="btn btn-sm btn-outline-secondary location-search-btn ms-2" title="Cari Lokasi"><i class="ti ti-search"></i></button>');
+            $('#from_location_id').parent().append(searchBtn);
+            
+            searchBtn.on('click', function() {
+                $('#location-search-input').val('');
+                $('#location-search-results').html('<div class="text-center text-muted py-4"><i class="ti ti-search"></i> Mulai ketik untuk mencari lokasi</div>');
+                Modal.show('locationSearchModal');
+                setTimeout(function() {
+                    $('#location-search-input').focus();
+                }, 300);
+            });
+        }
     });
 
     // Enable scanner when location is selected
@@ -533,7 +725,18 @@ $(document).ready(function() {
     $(window).on('beforeunload', function() {
         stopScanner();
     });
-});
+    }); // end $(document).ready
+    } // end initOutboundPage
+    
+    // Start checking for Select2
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            checkSelect2();
+        });
+    } else {
+        checkSelect2();
+    }
+})();
 </script>
 @endpush
 

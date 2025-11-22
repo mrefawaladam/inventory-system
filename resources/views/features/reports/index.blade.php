@@ -12,6 +12,70 @@
     .filter-card {
         margin-bottom: 1.5rem;
     }
+    
+    /* DataTable Processing/Loading Indicator */
+    .dataTables_processing {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.9);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 15px;
+        font-size: 16px;
+        font-weight: 500;
+        color: #333;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .dataTables_processing .spinner-border {
+        width: 3rem;
+        height: 3rem;
+        border-width: 0.3em;
+    }
+    
+    .dataTables_wrapper {
+        position: relative;
+    }
+    
+    #reports-table tbody {
+        position: relative;
+    }
+    
+    .table-loading-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 15px;
+        z-index: 10;
+        border-radius: 4px;
+    }
+    
+    .table-loading-overlay .spinner-border {
+        width: 3rem;
+        height: 3rem;
+        border-width: 0.3em;
+    }
+    
+    .table-loading-overlay .loading-text {
+        font-size: 16px;
+        font-weight: 500;
+        color: #333;
+    }
 </style>
 @endpush
 
@@ -141,6 +205,10 @@ $(document).ready(function() {
                     d.start_date = $('#start_date').val();
                     d.end_date = $('#end_date').val();
                     d.item_id = $('#item_id').val();
+                },
+                dataSrc: function(json) {
+                    $('#reports-table tbody').find('.table-loading-overlay').remove();
+                    return json.data;
                 }
             },
             columns: [
@@ -159,10 +227,34 @@ $(document).ready(function() {
             order: [[9, 'desc']],
             scrollX: true,
             language: {
+                processing: '<div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem; border-width: 0.3em;"></div><div class="mt-3" style="font-size: 16px; font-weight: 500;">Memuat data...</div>',
                 url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/id.json'
             },
             pageLength: 25,
             lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Semua"]]
+        });
+        
+        // Add loading overlay to table body when loading starts
+        table.on('processing.dt', function(e, settings, processing) {
+            if (processing) {
+                const tbody = $('#reports-table tbody');
+                if (tbody.find('.table-loading-overlay').length === 0) {
+                    tbody.append(`
+                        <tr class="table-loading-overlay-row">
+                            <td colspan="11" style="position: relative; height: 300px; padding: 0;">
+                                <div class="table-loading-overlay">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <div class="loading-text">Memuat data laporan...</div>
+                                </div>
+                            </td>
+                        </tr>
+                    `);
+                }
+            } else {
+                $('#reports-table tbody').find('.table-loading-overlay-row').remove();
+            }
         });
     }
 

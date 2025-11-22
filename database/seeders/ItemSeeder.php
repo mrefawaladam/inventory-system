@@ -14,17 +14,16 @@ class ItemSeeder extends Seeder
      */
     public function run(): void
     {
+        // Barang-barang sarana sekolah berdasarkan CSV
         $items = [
-            ['sku' => 'PRD-001', 'name' => 'Laptop ASUS ROG', 'barcode' => '1234567890123', 'unit' => 'Unit', 'minimum_stock' => 10],
-            ['sku' => 'PRD-002', 'name' => 'Mouse Logitech MX Master', 'barcode' => '1234567890124', 'unit' => 'Unit', 'minimum_stock' => 50],
-            ['sku' => 'PRD-003', 'name' => 'Keyboard Mechanical RGB', 'barcode' => '1234567890125', 'unit' => 'Unit', 'minimum_stock' => 30],
-            ['sku' => 'PRD-004', 'name' => 'Monitor LG 27 inch', 'barcode' => '1234567890126', 'unit' => 'Unit', 'minimum_stock' => 15],
-            ['sku' => 'PRD-005', 'name' => 'Webcam Logitech C920', 'barcode' => '1234567890127', 'unit' => 'Unit', 'minimum_stock' => 25],
-            ['sku' => 'PRD-006', 'name' => 'Headset Gaming RGB', 'barcode' => '1234567890128', 'unit' => 'Unit', 'minimum_stock' => 40],
-            ['sku' => 'PRD-007', 'name' => 'SSD Samsung 1TB', 'barcode' => '1234567890129', 'unit' => 'Unit', 'minimum_stock' => 20],
-            ['sku' => 'PRD-008', 'name' => 'RAM DDR4 16GB', 'barcode' => '1234567890130', 'unit' => 'Unit', 'minimum_stock' => 35],
-            ['sku' => 'PRD-009', 'name' => 'Power Supply 750W', 'barcode' => '1234567890131', 'unit' => 'Unit', 'minimum_stock' => 12],
-            ['sku' => 'PRD-010', 'name' => 'Motherboard ASUS B550', 'barcode' => '1234567890132', 'unit' => 'Unit', 'minimum_stock' => 8],
+            ['sku' => 'SR-001', 'name' => 'Foto Bingkai Presiden & Wapres', 'barcode' => '1234567890101', 'unit' => 'Unit', 'minimum_stock' => 20],
+            ['sku' => 'SR-002', 'name' => 'Jam Dinding', 'barcode' => '1234567890102', 'unit' => 'Unit', 'minimum_stock' => 30],
+            ['sku' => 'SR-003', 'name' => 'Lambang Garuda', 'barcode' => '1234567890103', 'unit' => 'Unit', 'minimum_stock' => 15],
+            ['sku' => 'SR-004', 'name' => 'Teko Air Minum', 'barcode' => '1234567890104', 'unit' => 'Unit', 'minimum_stock' => 25],
+            ['sku' => 'SR-005', 'name' => 'Tempat Sampah Ruangan', 'barcode' => '1234567890105', 'unit' => 'Unit', 'minimum_stock' => 40],
+            ['sku' => 'SR-006', 'name' => 'Termos Nasi', 'barcode' => '1234567890106', 'unit' => 'Unit', 'minimum_stock' => 35],
+            ['sku' => 'SR-007', 'name' => 'Tempat Hidangan Lauk', 'barcode' => '1234567890107', 'unit' => 'Unit', 'minimum_stock' => 30],
+            ['sku' => 'SR-008', 'name' => 'Tempat Tisu', 'barcode' => '1234567890108', 'unit' => 'Unit', 'minimum_stock' => 50],
         ];
 
         foreach ($items as $item) {
@@ -40,21 +39,28 @@ class ItemSeeder extends Seeder
             ]);
         }
 
-        // Generate additional random items
-        for ($i = 11; $i <= 30; $i++) {
-            $productName = fake()->words(3, true);
+        // Generate additional sarana sekolah items
+        $additionalItems = [
+            'Meja Belajar', 'Kursi Belajar', 'Papan Tulis', 'Spidol Papan Tulis', 
+            'Penghapus Papan Tulis', 'Rak Buku', 'Lemari Buku', 'Kipas Angin',
+            'Lampu Ruangan', 'Stop Kontak', 'Kabel Extension', 'Papan Pengumuman',
+            'Bendera Merah Putih', 'Peta Indonesia', 'Globe', 'Almari Arsip',
+            'Kursi Guru', 'Meja Guru', 'Kotak P3K', 'Alat Tulis Kantor'
+        ];
+
+        for ($i = 0; $i < count($additionalItems); $i++) {
             DB::table('items')->insert([
-                'sku' => 'PRD-' . str_pad($i, 3, '0', STR_PAD_LEFT),
-                'name' => ucwords($productName),
-                'barcode' => fake()->ean13(),
-                'unit' => fake()->randomElement(['Unit', 'Box', 'Pack', 'Set', 'Pcs']),
+                'sku' => 'SR-' . str_pad(9 + $i, 3, '0', STR_PAD_LEFT),
+                'name' => $additionalItems[$i],
+                'barcode' => '1234567890' . str_pad(109 + $i, 3, '0', STR_PAD_LEFT),
+                'unit' => fake()->randomElement(['Unit', 'Set', 'Pcs', 'Box']),
                 'image' => null,
-                'minimum_stock' => fake()->numberBetween(5, 50),
+                'minimum_stock' => fake()->numberBetween(10, 60),
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
         }
 
-        $this->command->info('Items seeded successfully!');
+        $this->command->info('Sarana sekolah items seeded successfully!');
     }
 }

@@ -85,8 +85,8 @@ if (typeof ModalHelper === 'undefined') {
         // Show modal
         modal.show();
 
-        // Load content via AJAX
-        $.ajax({
+        // Load content via AJAX and return promise
+        return $.ajax({
             url: url,
             method: 'GET',
             headers: {
@@ -106,6 +106,8 @@ if (typeof ModalHelper === 'undefined') {
                         bodyEl.innerHTML = response;
                     }
                 }
+                // Trigger custom event after content is loaded
+                $(modalEl).trigger('modal:content-loaded');
             },
             error: function(xhr) {
                 if (bodyEl) {
@@ -118,6 +120,8 @@ if (typeof ModalHelper === 'undefined') {
                 if (window.Toast) {
                     window.Toast.error('Failed to load content.');
                 }
+                // Trigger error event
+                $(modalEl).trigger('modal:content-error', [xhr]);
             }
         });
     }

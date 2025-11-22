@@ -89,6 +89,14 @@ class TrackingController extends Controller
             'warehouse_id' => $request->get('warehouse_id'),
         ];
 
+        // Get itemId from route parameter or query string
+        if (!$itemId) {
+            $itemId = $request->get('itemId');
+            if ($itemId) {
+                $itemId = (int) $itemId;
+            }
+        }
+
         // If item ID is provided, get history
         if ($itemId) {
             $item = Item::find($itemId);
@@ -130,6 +138,93 @@ class TrackingController extends Controller
             'success' => true,
             'history' => $history,
             'itemDetails' => $itemDetails,
+            'warehouses' => $warehousesMap,
+        ]);
+    }
+
+    /**
+     * Display the landing page with tracking
+     */
+    public function landing(Request $request)
+    {
+        if (auth()->check()) {
+            return redirect()->route('dashboard');
+        }
+
+        // Get filter data
+        $items = Item::orderBy('name')->get();
+        $warehouses = Warehouse::orderBy('name')->get();
+
+        // Get initial routes (limit untuk landing page)
+        $filters = [
+            'date_from' => $request->get('date_from'),
+            'date_to' => $request->get('date_to'),
+            'type' => $request->get('type'),
+            'item_id' => $request->get('item_id'),
+            'warehouse_id' => $request->get('warehouse_id'),
+        ];
+
+        $routes = $this->trackingService->getTransactionsWithRoutes($filters);
+        $warehousesMap = $this->trackingService->getWarehousesForMap();
+
+        return view('pages.landing', compact(
+            'routes',
+            'warehousesMap',
+            'items',
+            'warehouses',
+            'filters'
+        ));
+    }
+
+    /**
+     * Display the public tracking page (no login required)
+     */
+    public function publicTracking(Request $request)
+    {
+        // Get filter data
+        $items = Item::orderBy('name')->get();
+        $warehouses = Warehouse::orderBy('name')->get();
+
+        // Get initial routes
+        $filters = [
+            'date_from' => $request->get('date_from'),
+            'date_to' => $request->get('date_to'),
+            'type' => $request->get('type'),
+            'item_id' => $request->get('item_id'),
+            'warehouse_id' => $request->get('warehouse_id'),
+        ];
+
+        $routes = $this->trackingService->getTransactionsWithRoutes($filters);
+        $warehousesMap = $this->trackingService->getWarehousesForMap();
+
+        return view('pages.public-tracking', compact(
+            'routes',
+            'warehousesMap',
+            'items',
+            'warehouses',
+            'filters'
+        ));
+    }
+
+    /**
+     * Get route data via API for public tracking (for AJAX requests)
+     */
+    public function getPublicRoutes(Request $request)
+    {
+        $filters = [
+            'date_from' => $request->get('date_from'),
+            'date_to' => $request->get('date_to'),
+            'type' => $request->get('type'),
+            'item_id' => $request->get('item_id'),
+            'warehouse_id' => $request->get('warehouse_id'),
+        ];
+
+        $routes = $this->trackingService->getTransactionsWithRoutes($filters);
+        $warehousesMap = $this->trackingService->getWarehousesForMap();
+
+        return response()->json([
+            'success' => true,
+            'routes' => $routes,
             'warehouses' => $warehousesMap,
         ]);
     }

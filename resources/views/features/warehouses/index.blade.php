@@ -4,6 +4,7 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('assets/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css') }}" />
+<link rel="stylesheet" href="{{ asset('assets/libs/select2/dist/css/select2.min.css') }}" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
     #warehouse-map {
@@ -82,6 +83,71 @@
             overflow-x: scroll;
             -webkit-overflow-scrolling: touch;
         }
+    }
+    
+    /* DataTable Processing/Loading Indicator */
+    .dataTables_processing {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.9);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 15px;
+        font-size: 16px;
+        font-weight: 500;
+        color: #333;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .dataTables_processing .spinner-border {
+        width: 3rem;
+        height: 3rem;
+        border-width: 0.3em;
+    }
+    
+    .dataTables_wrapper {
+        position: relative;
+    }
+    
+    /* Loading overlay for table body */
+    #warehouses-table tbody {
+        position: relative;
+    }
+    
+    .table-loading-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 15px;
+        z-index: 10;
+        border-radius: 4px;
+    }
+    
+    .table-loading-overlay .spinner-border {
+        width: 3rem;
+        height: 3rem;
+        border-width: 0.3em;
+    }
+    
+    .table-loading-overlay .loading-text {
+        font-size: 16px;
+        font-weight: 500;
+        color: #333;
     }
     /* Search results styling */
     #search-results {
@@ -189,9 +255,10 @@
                     <thead>
                         <tr>
                             <th style="min-width: 60px;">ID</th>
-                            <th style="min-width: 150px;">Nama Sekolah</th>
-                            <th style="min-width: 200px;">Alamat Jalan</th>
-                            <th style="min-width: 150px;">Koordinat</th>
+                            <th style="min-width: 200px;">Nama Sekolah Rakyat</th>
+                            <th style="min-width: 150px;">Penerima</th>
+                            <th style="min-width: 250px;">Alamat Jalan</th>
+                            <th style="min-width: 180px;">Kota/Kab & Provinsi</th>
                             <th style="min-width: 120px;">Tanggal Dibuat</th>
                             <th style="min-width: 120px;">Aksi</th>
                         </tr>
@@ -222,6 +289,7 @@
 @endif
 <script src="{{ asset('assets/libs/datatables.net/js/jquery.dataTables.min.js') }}"></script>
 <script src="{{ asset('assets/libs/datatables.net-bs5/js/dataTables.bootstrap5.min.js') }}"></script>
+<script src="{{ asset('assets/libs/select2/dist/js/select2.min.js') }}"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 $(document).ready(function() {
@@ -419,12 +487,19 @@ $(document).ready(function() {
     const warehousesTable = $('#warehouses-table').DataTable({
         processing: true,
         serverSide: true,
-        ajax: "{{ route('warehouses.index') }}",
+        ajax: {
+            url: "{{ route('warehouses.index') }}",
+            dataSrc: function(json) {
+                $('#warehouses-table tbody').find('.table-loading-overlay').remove();
+                return json.data;
+            }
+        },
         columns: [
             { data: 'id', name: 'id' },
             { data: 'name', name: 'name' },
+            { data: 'recipient', name: 'recipient' },
             { data: 'address', name: 'address' },
-            { data: 'coordinates', name: 'coordinates', orderable: false, searchable: false },
+            { data: 'location_info', name: 'location_info', orderable: false, searchable: false },
             { data: 'created_at', name: 'created_at' },
             { data: 'action', name: 'action', orderable: false, searchable: false }
         ],
@@ -435,19 +510,44 @@ $(document).ready(function() {
         autoWidth: false,
         order: [[0, 'desc']],
         language: {
-            processing: '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>',
-            lengthMenu: "Show _MENU_ entries",
-            zeroRecords: "No matching records found",
-            info: "Showing _START_ to _END_ of _TOTAL_ entries",
-            infoEmpty: "Showing 0 to 0 of 0 entries",
-            infoFiltered: "(filtered from _MAX_ total entries)",
-            search: "Search:",
+            processing: '<div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem; border-width: 0.3em;"></div><div class="mt-3" style="font-size: 16px; font-weight: 500;">Memuat data...</div>',
+            lengthMenu: "Tampilkan _MENU_ entri",
+            zeroRecords: "Tidak ada data yang ditemukan",
+            info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ entri",
+            infoEmpty: "Menampilkan 0 sampai 0 dari 0 entri",
+            infoFiltered: "(difilter dari _MAX_ total entri)",
+            search: "Cari:",
             paginate: {
-                first: "First",
-                last: "Last",
-                next: "Next",
-                previous: "Previous"
+                first: "Pertama",
+                last: "Terakhir",
+                next: "Selanjutnya",
+                previous: "Sebelumnya"
+            },
+            loadingRecords: "Memuat data...",
+            emptyTable: "Tidak ada data yang tersedia"
+        }
+    });
+    
+    // Add loading overlay to table body when loading starts
+    warehousesTable.on('processing.dt', function(e, settings, processing) {
+        if (processing) {
+            const tbody = $('#warehouses-table tbody');
+            if (tbody.find('.table-loading-overlay').length === 0) {
+                tbody.append(`
+                    <tr class="table-loading-overlay-row">
+                        <td colspan="7" style="position: relative; height: 300px; padding: 0;">
+                            <div class="table-loading-overlay">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <div class="loading-text">Memuat data sekolah...</div>
+                            </div>
+                        </td>
+                    </tr>
+                `);
             }
+        } else {
+            $('#warehouses-table tbody').find('.table-loading-overlay-row').remove();
         }
     });
 
@@ -873,19 +973,600 @@ $(document).ready(function() {
         }
     }
 
-    // Initialize map when modal is shown and content is loaded
+    // Function to initialize location selects (moved from form.blade.php)
+    function initializeLocationSelects() {
+        console.log('🔵 INITIALIZE LOCATION SELECTS CALLED');
+        
+        if (window.locationSelectsInitialized) {
+            console.log('⚠ Already initialized, skipping...');
+            return;
+        }
+        
+        const provinceSelect = $('#province_select');
+        const citySelect = $('#city_select');
+        const districtSelect = $('#district_select');
+        const villageSelect = $('#village_select');
+        const provinceInput = $('#province');
+        const cityInput = $('#city');
+        const districtInput = $('#district');
+        const villageInput = $('#village');
+        
+        if (provinceSelect.length === 0) {
+            console.log('⚠ Province select not found, will retry...');
+            return false;
+        }
+        
+        console.log('✓ Form elements found, initializing...');
+        console.log('Province options count:', provinceSelect.find('option').length);
+        console.log('Province options:', provinceSelect.find('option').map(function() { return $(this).text(); }).get());
+        
+        const hasSelect2 = typeof $.fn.select2 !== 'undefined';
+        console.log('Select2 available:', hasSelect2);
+        
+        // Initialize Select2 if available
+        if (hasSelect2) {
+            try {
+                // Destroy existing Select2 instances if any
+                if (provinceSelect.hasClass('select2-hidden-accessible')) {
+                    provinceSelect.select2('destroy');
+                }
+                if (citySelect.hasClass('select2-hidden-accessible')) {
+                    citySelect.select2('destroy');
+                }
+                if (districtSelect.hasClass('select2-hidden-accessible')) {
+                    districtSelect.select2('destroy');
+                }
+                if (villageSelect.hasClass('select2-hidden-accessible')) {
+                    villageSelect.select2('destroy');
+                }
+                
+                // Initialize Select2
+                provinceSelect.select2({ 
+                    placeholder: '-- Pilih Provinsi --', 
+                    allowClear: false,
+                    dropdownParent: $('#warehouseModal'), // Important: attach to modal
+                    language: {
+                        noResults: function() { return "Tidak ada hasil"; },
+                        searching: function() { return "Mencari..."; }
+                    }
+                });
+                citySelect.select2({ 
+                    placeholder: '-- Pilih Kota/Kabupaten --', 
+                    allowClear: false,
+                    dropdownParent: $('#warehouseModal'),
+                    language: {
+                        noResults: function() { return "Tidak ada hasil"; },
+                        searching: function() { return "Mencari..."; }
+                    }
+                });
+                districtSelect.select2({ 
+                    placeholder: '-- Pilih Kecamatan (Opsional) --', 
+                    allowClear: true,
+                    dropdownParent: $('#warehouseModal'),
+                    language: {
+                        noResults: function() { return "Tidak ada hasil"; },
+                        searching: function() { return "Mencari..."; }
+                    }
+                });
+                villageSelect.select2({ 
+                    placeholder: '-- Pilih Desa/Kelurahan (Opsional) --', 
+                    allowClear: true,
+                    dropdownParent: $('#warehouseModal'),
+                    language: {
+                        noResults: function() { return "Tidak ada hasil"; },
+                        searching: function() { return "Mencari..."; }
+                    }
+                });
+                console.log('✓ Select2 initialized with dropdownParent');
+            } catch (e) {
+                console.error('Error initializing Select2:', e);
+            }
+        }
+        
+        // Load cities function
+        function loadCities(provinceId) {
+            console.log('🚀 LOAD CITIES:', provinceId);
+            if (!provinceId) return;
+            
+            citySelect.prop('disabled', true);
+            if (hasSelect2) {
+                citySelect.select2('destroy').empty().append('<option value="">Memuat...</option>');
+                citySelect.select2({ 
+                    placeholder: 'Memuat...',
+                    dropdownParent: $('#warehouseModal')
+                });
+            } else {
+                citySelect.empty().append('<option value="">Memuat...</option>');
+            }
+            
+            $.ajax({
+                url: '{{ route("api.cities") }}',
+                method: 'GET',
+                data: { province_id: provinceId },
+                dataType: 'json',
+                success: function(response) {
+                    console.log('✅ Cities loaded:', response);
+                    let cities = Array.isArray(response) ? response : (response.data || []);
+                    
+                    if (hasSelect2) citySelect.select2('destroy');
+                    citySelect.empty().append('<option value="">-- Pilih Kota/Kabupaten --</option>');
+                    
+                    cities.forEach(function(city) {
+                        if (city && city.id && city.name) {
+                            citySelect.append($('<option>').val(city.id).attr('data-name', city.name).text(city.name));
+                        }
+                    });
+                    
+                    citySelect.prop('disabled', false);
+                    if (hasSelect2) {
+                        citySelect.select2({ 
+                            placeholder: '-- Pilih Kota/Kabupaten --', 
+                            allowClear: false,
+                            dropdownParent: $('#warehouseModal'),
+                            language: {
+                                noResults: function() { return "Tidak ada hasil"; },
+                                searching: function() { return "Mencari..."; }
+                            }
+                        });
+                    }
+                    console.log('✓ City dropdown populated');
+                    
+                    // If edit mode and city exists, select it and load districts
+                    const currentCityName = cityInput.val();
+                    if (currentCityName) {
+                        console.log('🔵 Edit mode: Looking for city:', currentCityName);
+                        const matchingCity = cities.find(function(city) {
+                            return city.name === currentCityName || city.name.trim() === currentCityName.trim();
+                        });
+                        if (matchingCity) {
+                            console.log('✅ Found matching city:', matchingCity);
+                            citySelect.val(matchingCity.id);
+                            if (hasSelect2) {
+                                citySelect.trigger('change.select2');
+                            }
+                            // Trigger change to load districts
+                            setTimeout(function() {
+                                citySelect.trigger('change.location');
+                            }, 100);
+                        }
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('❌ Error loading cities:', error, xhr);
+                    citySelect.empty().append('<option value="">Error memuat kota</option>');
+                }
+            });
+        }
+        
+        // Load districts by city
+        function loadDistricts(cityId) {
+            console.log('🚀 LOAD DISTRICTS:', cityId);
+            if (!cityId) {
+                districtSelect.empty().append('<option value="">-- Pilih Kota/Kabupaten terlebih dahulu --</option>');
+                districtSelect.prop('disabled', true);
+                if (hasSelect2) {
+                    districtSelect.select2('destroy');
+                    districtSelect.select2({
+                        placeholder: '-- Pilih Kota/Kabupaten terlebih dahulu --',
+                        allowClear: true,
+                        dropdownParent: $('#warehouseModal')
+                    });
+                }
+                villageSelect.empty().append('<option value="">-- Pilih Kecamatan terlebih dahulu --</option>');
+                villageSelect.prop('disabled', true);
+                if (hasSelect2) {
+                    villageSelect.select2('destroy');
+                    villageSelect.select2({
+                        placeholder: '-- Pilih Kecamatan terlebih dahulu --',
+                        allowClear: true,
+                        dropdownParent: $('#warehouseModal')
+                    });
+                }
+                return;
+            }
+            
+            districtSelect.prop('disabled', true);
+            if (hasSelect2) {
+                districtSelect.select2('destroy').empty().append('<option value="">Memuat...</option>');
+                districtSelect.select2({
+                    placeholder: 'Memuat kecamatan...',
+                    allowClear: true,
+                    dropdownParent: $('#warehouseModal')
+                });
+            } else {
+                districtSelect.empty().append('<option value="">Memuat...</option>');
+            }
+            
+            $.ajax({
+                url: '{{ route("api.districts") }}',
+                method: 'GET',
+                data: { city_id: cityId },
+                dataType: 'json',
+                success: function(response) {
+                    console.log('✅ Districts loaded:', response);
+                    let districts = Array.isArray(response) ? response : (response.data || []);
+                    
+                    if (hasSelect2) districtSelect.select2('destroy');
+                    districtSelect.empty().append('<option value="">-- Pilih Kecamatan (Opsional) --</option>');
+                    
+                    districts.forEach(function(district) {
+                        if (district && district.id && district.name) {
+                            districtSelect.append($('<option>').val(district.id).attr('data-name', district.name).text(district.name));
+                        }
+                    });
+                    
+                    districtSelect.prop('disabled', false);
+                    if (hasSelect2) {
+                        districtSelect.select2({
+                            placeholder: '-- Pilih Kecamatan (Opsional) --',
+                            allowClear: true,
+                            dropdownParent: $('#warehouseModal'),
+                            language: {
+                                noResults: function() { return "Tidak ada hasil"; },
+                                searching: function() { return "Mencari..."; }
+                            }
+                        });
+                    }
+                    console.log('✓ District dropdown populated');
+                    
+                    // If edit mode and district exists, select it and load villages
+                    const currentDistrictName = districtInput.val();
+                    if (currentDistrictName) {
+                        console.log('🔵 Edit mode: Looking for district:', currentDistrictName);
+                        const matchingDistrict = districts.find(function(district) {
+                            return district.name === currentDistrictName || district.name.trim() === currentDistrictName.trim();
+                        });
+                        if (matchingDistrict) {
+                            console.log('✅ Found matching district:', matchingDistrict);
+                            districtSelect.val(matchingDistrict.id);
+                            if (hasSelect2) {
+                                districtSelect.trigger('change.select2');
+                            }
+                            // Trigger change to load villages
+                            setTimeout(function() {
+                                districtSelect.trigger('change.location');
+                            }, 100);
+                        }
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('❌ Error loading districts:', error, xhr);
+                    districtSelect.empty().append('<option value="">Error memuat kecamatan</option>');
+                    districtSelect.prop('disabled', true);
+                }
+            });
+        }
+        
+        // Load villages by district
+        function loadVillages(districtId) {
+            console.log('🚀 LOAD VILLAGES:', districtId);
+            if (!districtId) {
+                villageSelect.empty().append('<option value="">-- Pilih Kecamatan terlebih dahulu --</option>');
+                villageSelect.prop('disabled', true);
+                if (hasSelect2) {
+                    villageSelect.select2('destroy');
+                    villageSelect.select2({
+                        placeholder: '-- Pilih Kecamatan terlebih dahulu --',
+                        allowClear: true,
+                        dropdownParent: $('#warehouseModal')
+                    });
+                }
+                return;
+            }
+            
+            villageSelect.prop('disabled', true);
+            if (hasSelect2) {
+                villageSelect.select2('destroy').empty().append('<option value="">Memuat...</option>');
+                villageSelect.select2({
+                    placeholder: 'Memuat desa...',
+                    allowClear: true,
+                    dropdownParent: $('#warehouseModal')
+                });
+            } else {
+                villageSelect.empty().append('<option value="">Memuat...</option>');
+            }
+            
+            $.ajax({
+                url: '{{ route("api.villages") }}',
+                method: 'GET',
+                data: { district_id: districtId },
+                dataType: 'json',
+                success: function(response) {
+                    console.log('✅ Villages loaded:', response);
+                    let villages = Array.isArray(response) ? response : (response.data || []);
+                    
+                    if (hasSelect2) villageSelect.select2('destroy');
+                    villageSelect.empty().append('<option value="">-- Pilih Desa/Kelurahan (Opsional) --</option>');
+                    
+                    villages.forEach(function(village) {
+                        if (village && village.id && village.name) {
+                            villageSelect.append($('<option>').val(village.id).attr('data-name', village.name).text(village.name));
+                        }
+                    });
+                    
+                    villageSelect.prop('disabled', false);
+                    if (hasSelect2) {
+                        villageSelect.select2({
+                            placeholder: '-- Pilih Desa/Kelurahan (Opsional) --',
+                            allowClear: true,
+                            dropdownParent: $('#warehouseModal'),
+                            language: {
+                                noResults: function() { return "Tidak ada hasil"; },
+                                searching: function() { return "Mencari..."; }
+                            }
+                        });
+                    }
+                    console.log('✓ Village dropdown populated');
+                    
+                    // If edit mode and village exists, select it
+                    const currentVillageName = villageInput.val();
+                    if (currentVillageName) {
+                        console.log('🔵 Edit mode: Looking for village:', currentVillageName);
+                        const matchingVillage = villages.find(function(village) {
+                            return village.name === currentVillageName || village.name.trim() === currentVillageName.trim();
+                        });
+                        if (matchingVillage) {
+                            console.log('✅ Found matching village:', matchingVillage);
+                            villageSelect.val(matchingVillage.id);
+                            if (hasSelect2) {
+                                villageSelect.trigger('change.select2');
+                            }
+                            villageSelect.trigger('change.location');
+                        }
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('❌ Error loading villages:', error, xhr);
+                    villageSelect.empty().append('<option value="">Error memuat desa</option>');
+                    villageSelect.prop('disabled', true);
+                }
+            });
+        }
+        
+        // Event handlers - Standard change event (works with or without Select2)
+        provinceSelect.off('change.location').on('change.location', function() {
+            const provinceId = $(this).val();
+            console.log('🔵 PROVINCE CHANGED:', provinceId);
+            if (provinceId) {
+                const selectedOption = $(this).find('option:selected');
+                const provinceName = selectedOption.data('name') || selectedOption.text().trim();
+                console.log('Province Name:', provinceName);
+                provinceInput.val(provinceName);
+                
+                // If Select2 is active, ensure it displays the selected value
+                if (hasSelect2) {
+                    // Small delay to ensure Select2 processes the change
+                    setTimeout(function() {
+                        provinceSelect.trigger('change.select2');
+                    }, 10);
+                }
+                
+                loadCities(provinceId);
+            } else {
+                provinceInput.val('');
+            }
+        });
+        
+        if (hasSelect2) {
+            provinceSelect.off('select2:select.location').on('select2:select.location', function(e) {
+                const provinceId = e.params.data.id;
+                console.log('🔵 PROVINCE SELECT2 SELECTED:', provinceId);
+                
+                // Get province name from option element
+                const optionElement = $(e.params.data.element);
+                const provinceName = optionElement.data('name') || optionElement.text().trim() || e.params.data.text.trim();
+                
+                console.log('Province Name from Select2:', provinceName);
+                provinceInput.val(provinceName);
+                
+                // Ensure the select value is set
+                provinceSelect.val(provinceId);
+                
+                // Force Select2 to update its display - use multiple methods to ensure it works
+                setTimeout(function() {
+                    // Method 1: Trigger change.select2
+                    provinceSelect.trigger('change.select2');
+                    
+                    // Method 2: Re-initialize Select2 if needed (only if display is still wrong)
+                    const select2Container = provinceSelect.next('.select2-container');
+                    if (select2Container.length > 0) {
+                        const selectedText = provinceSelect.find('option:selected').text().trim();
+                        const select2Selection = select2Container.find('.select2-selection__rendered');
+                        if (select2Selection.length > 0 && select2Selection.text().trim() !== selectedText) {
+                            console.log('⚠ Select2 display mismatch, forcing update...');
+                            provinceSelect.select2('destroy');
+                            provinceSelect.select2({ 
+                                placeholder: '-- Pilih Provinsi --', 
+                                allowClear: false,
+                                dropdownParent: $('#warehouseModal'),
+                                language: {
+                                    noResults: function() { return "Tidak ada hasil"; },
+                                    searching: function() { return "Mencari..."; }
+                                }
+                            });
+                            provinceSelect.val(provinceId).trigger('change.select2');
+                        }
+                    }
+                    
+                    console.log('✓ Select2 display updated for province:', provinceName);
+                }, 50);
+                
+                loadCities(provinceId);
+            });
+        }
+        
+        // City/Kabupaten change handler
+        citySelect.off('change.location').on('change.location', function() {
+            const cityId = $(this).val();
+            console.log('🔵 CITY CHANGED:', cityId);
+            if (cityId) {
+                const selectedOption = $(this).find('option:selected');
+                const cityName = selectedOption.data('name') || selectedOption.text().trim();
+                console.log('City Name:', cityName);
+                cityInput.val(cityName);
+                
+                if (hasSelect2) {
+                    setTimeout(function() {
+                        citySelect.trigger('change.select2');
+                    }, 10);
+                }
+                
+                loadDistricts(cityId);
+            } else {
+                cityInput.val('');
+                loadDistricts(null);
+            }
+        });
+        
+        if (hasSelect2) {
+            citySelect.off('select2:select.location').on('select2:select.location', function(e) {
+                const cityId = e.params.data.id;
+                console.log('🔵 CITY SELECT2 SELECTED:', cityId);
+                
+                const optionElement = $(e.params.data.element);
+                const cityName = optionElement.data('name') || optionElement.text().trim() || e.params.data.text.trim();
+                
+                console.log('City Name from Select2:', cityName);
+                cityInput.val(cityName);
+                
+                citySelect.val(cityId);
+                
+                setTimeout(function() {
+                    citySelect.trigger('change.select2');
+                }, 10);
+                
+                loadDistricts(cityId);
+            });
+        }
+        
+        // District change handler
+        districtSelect.off('change.location').on('change.location', function() {
+            const districtId = $(this).val();
+            console.log('🔵 DISTRICT CHANGED:', districtId);
+            if (districtId) {
+                const selectedOption = $(this).find('option:selected');
+                const districtName = selectedOption.data('name') || selectedOption.text().trim();
+                districtInput.val(districtName);
+                
+                if (hasSelect2) {
+                    setTimeout(function() {
+                        districtSelect.trigger('change.select2');
+                    }, 10);
+                }
+                
+                loadVillages(districtId);
+            } else {
+                districtInput.val('');
+                loadVillages(null);
+            }
+        });
+        
+        if (hasSelect2) {
+            districtSelect.off('select2:select.location').on('select2:select.location', function(e) {
+                const districtId = e.params.data.id;
+                console.log('🔵 DISTRICT SELECT2 SELECTED:', districtId);
+                
+                const optionElement = $(e.params.data.element);
+                const districtName = optionElement.data('name') || optionElement.text().trim() || e.params.data.text.trim();
+                
+                districtInput.val(districtName);
+                districtSelect.val(districtId);
+                
+                setTimeout(function() {
+                    districtSelect.trigger('change.select2');
+                }, 10);
+                
+                loadVillages(districtId);
+            });
+        }
+        
+        // Village change handler
+        villageSelect.off('change.location').on('change.location', function() {
+            const selectedOption = $(this).find('option:selected');
+            const villageName = selectedOption.data('name') || selectedOption.text().trim();
+            villageInput.val(villageName || '');
+            console.log('🔵 VILLAGE CHANGED:', villageName);
+        });
+        
+        if (hasSelect2) {
+            villageSelect.off('select2:select.location').on('select2:select.location', function(e) {
+                const optionElement = $(e.params.data.element);
+                const villageName = optionElement.data('name') || optionElement.text().trim() || e.params.data.text.trim();
+                villageInput.val(villageName);
+                console.log('🔵 VILLAGE SELECT2 SELECTED:', villageName);
+            });
+        }
+        
+        // Check if province already selected (edit mode)
+        const currentProvinceId = provinceSelect.val();
+        const currentProvinceName = provinceInput.val();
+        if (currentProvinceId && currentProvinceName) {
+            console.log('→ Edit mode: Province already selected:', currentProvinceId, currentProvinceName);
+            if (hasSelect2) {
+                // Force Select2 to update display
+                setTimeout(function() {
+                    provinceSelect.trigger('change.select2');
+                }, 100);
+            }
+            // Load cities and then select the matching city
+            loadCities(currentProvinceId);
+        }
+        
+        window.locationSelectsInitialized = true;
+        console.log('✅ Location selects initialized');
+        return true;
+    }
+    
+    // Initialize when modal is shown
     $('#warehouseModal').on('shown.bs.modal', function() {
-        // Wait for content to be loaded via AJAX
+        console.log('🔵 MODAL SHOWN');
+        window.locationSelectsInitialized = false; // Reset flag
+        
         setTimeout(function() {
-            // Initialize form location map
+            console.log('🔵 Checking for form...');
+            console.log('Province select count:', $('#province_select').length);
+            if ($('#province_select').length > 0) {
+                console.log('🔵 Form found, initializing...');
+                initializeLocationSelects();
+            } else {
+                console.log('⚠ Form not found yet');
+            }
+            
+            // Initialize maps
             if ($('#location-map').length && !window.locationMap) {
+                console.log('🔵 Initializing location map...');
                 initLocationMap();
             }
-            // Initialize show location map
             if ($('#show-location-map').length && !window.showLocationMap) {
+                console.log('🔵 Initializing show location map...');
                 initShowLocationMap();
             }
         }, 600);
+    });
+    
+    // Also listen for content changes via MutationObserver
+    $(document).ready(function() {
+        const modalBody = document.getElementById('warehouseModalBody');
+        if (modalBody) {
+            console.log('🔵 Setting up MutationObserver for modal body');
+            const contentObserver = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.addedNodes.length > 0) {
+                        console.log('🔵 Content added to modal');
+                        setTimeout(function() {
+                            if ($('#province_select').length > 0 && !window.locationSelectsInitialized) {
+                                console.log('🔵 Form detected via MutationObserver, initializing...');
+                                initializeLocationSelects();
+                            }
+                        }, 200);
+                    }
+                });
+            });
+            contentObserver.observe(modalBody, { childList: true, subtree: true });
+            console.log('✓ MutationObserver set up');
+        } else {
+            console.log('⚠ Modal body not found');
+        }
     });
 
     // Also listen for when content is loaded via AJAX using MutationObserver

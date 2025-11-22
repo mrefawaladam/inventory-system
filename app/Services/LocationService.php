@@ -32,7 +32,7 @@ class LocationService
         } elseif ($type === LocationType::RACK) {
             // Rack code: R01, R02, etc. (within a zone)
             if (!$parentId) {
-                throw new \InvalidArgumentException('Rack must have a parent zone');
+                throw new \InvalidArgumentException('Rak harus memiliki Area sebagai parent. Silakan pilih Area terlebih dahulu sebelum membuat Rak.');
             }
             
             $parentZone = Location::findOrFail($parentId);
@@ -53,12 +53,12 @@ class LocationService
         } elseif ($type === LocationType::SLOT) {
             // Slot code: R01-S01, R01-S02, etc. (within a rack)
             if (!$parentId) {
-                throw new \InvalidArgumentException('Slot must have a parent rack');
+                throw new \InvalidArgumentException('Tempat harus memiliki Rak sebagai parent. Silakan pilih Rak terlebih dahulu sebelum membuat Tempat.');
             }
             
             $parentRack = Location::findOrFail($parentId);
             if ($parentRack->type !== LocationType::RACK) {
-                throw new \InvalidArgumentException('Slot parent must be a rack');
+                throw new \InvalidArgumentException('Parent untuk Tempat harus berupa Rak. Silakan pilih Rak yang valid.');
             }
             
             $lastSlot = Location::where('parent_id', $parentId)
@@ -80,7 +80,7 @@ class LocationService
             return $rackCode . '-S' . str_pad($nextNumber, 2, '0', STR_PAD_LEFT);
         }
         
-        throw new \InvalidArgumentException('Invalid location type');
+        throw new \InvalidArgumentException('Tipe lokasi tidak valid. Pilih Area, Rak, atau Tempat.');
     }
 
     /**
@@ -104,27 +104,27 @@ class LocationService
         
         // Validate parent relationship
         if ($type === LocationType::RACK && empty($data['parent_id'])) {
-            throw new \InvalidArgumentException('Rack must have a parent zone');
+            throw new \InvalidArgumentException('Rak harus memiliki Area sebagai parent. Silakan pilih Area di form sebelum menyimpan.');
         }
         
         if ($type === LocationType::SLOT && empty($data['parent_id'])) {
-            throw new \InvalidArgumentException('Slot must have a parent rack');
+            throw new \InvalidArgumentException('Tempat harus memiliki Rak sebagai parent. Silakan pilih Rak di form sebelum menyimpan.');
         }
         
         if (!empty($data['parent_id'])) {
             $parent = Location::findOrFail($data['parent_id']);
             
             if ($type === LocationType::RACK && $parent->type !== LocationType::ZONE) {
-                throw new \InvalidArgumentException('Rack parent must be a zone');
+                throw new \InvalidArgumentException('Parent untuk Rak harus berupa Area. Parent yang dipilih bukan Area.');
             }
             
             if ($type === LocationType::SLOT && $parent->type !== LocationType::RACK) {
-                throw new \InvalidArgumentException('Slot parent must be a rack');
+                throw new \InvalidArgumentException('Parent untuk Tempat harus berupa Rak. Parent yang dipilih bukan Rak.');
             }
             
             // Ensure parent belongs to same warehouse
             if ($parent->warehouse_id != $data['warehouse_id']) {
-                throw new \InvalidArgumentException('Parent location must belong to the same warehouse');
+                throw new \InvalidArgumentException('Parent lokasi harus berada di Sekolah yang sama. Silakan pilih parent dari Sekolah yang sama.');
             }
         }
         
@@ -163,27 +163,27 @@ class LocationService
         // Validate parent relationship if changed
         if (isset($data['parent_id']) && $data['parent_id'] != $location->parent_id) {
             if ($type === LocationType::RACK && empty($data['parent_id'])) {
-                throw new \InvalidArgumentException('Rack must have a parent zone');
+                throw new \InvalidArgumentException('Rak harus memiliki Area sebagai parent. Silakan pilih Area di form sebelum menyimpan.');
             }
             
             if ($type === LocationType::SLOT && empty($data['parent_id'])) {
-                throw new \InvalidArgumentException('Slot must have a parent rack');
+                throw new \InvalidArgumentException('Tempat harus memiliki Rak sebagai parent. Silakan pilih Rak di form sebelum menyimpan.');
             }
             
             if (!empty($data['parent_id'])) {
                 $parent = Location::findOrFail($data['parent_id']);
                 
                 if ($type === LocationType::RACK && $parent->type !== LocationType::ZONE) {
-                    throw new \InvalidArgumentException('Rack parent must be a zone');
+                    throw new \InvalidArgumentException('Parent untuk Rak harus berupa Area. Parent yang dipilih bukan Area.');
                 }
                 
                 if ($type === LocationType::SLOT && $parent->type !== LocationType::RACK) {
-                    throw new \InvalidArgumentException('Slot parent must be a rack');
+                    throw new \InvalidArgumentException('Parent untuk Tempat harus berupa Rak. Parent yang dipilih bukan Rak.');
                 }
                 
                 // Prevent circular reference
                 if ($this->wouldCreateCircularReference($location, $data['parent_id'])) {
-                    throw new \InvalidArgumentException('Cannot set parent: would create circular reference');
+                    throw new \InvalidArgumentException('Tidak dapat mengatur parent: akan menciptakan referensi melingkar. Lokasi tidak dapat menjadi parent dari dirinya sendiri atau parent-nya.');
                 }
             }
         }
@@ -207,7 +207,7 @@ class LocationService
     {
         // Check if location has children
         if ($location->children()->count() > 0) {
-            throw new \InvalidArgumentException('Cannot delete location with child locations');
+            throw new \InvalidArgumentException('Tidak dapat menghapus lokasi yang memiliki lokasi child. Hapus semua lokasi child terlebih dahulu.');
         }
         
         return $location->delete();
@@ -219,7 +219,7 @@ class LocationService
     protected function validateCapacity(int $capacity): void
     {
         if ($capacity < 0) {
-            throw new \InvalidArgumentException('Capacity cannot be negative');
+            throw new \InvalidArgumentException('Jumlah siswa penerima tidak boleh negatif. Silakan masukkan angka 0 atau lebih besar.');
         }
     }
 

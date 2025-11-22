@@ -4,7 +4,6 @@
     <div>
       <div class="brand-logo d-flex align-items-center">
         <a href="{{ route('dashboard') }}" class="text-nowrap logo-img">
-          <img src="{{ asset('assets/images/logos/logo.svg') }}" alt="Logo" />
         </a>
       </div>
 
@@ -36,35 +35,49 @@
           <li class="sidebar-item">
             <a class="sidebar-link" href="{{ route('users.index') }}">
               <iconify-icon icon="solar:users-group-two-rounded-line-duotone"></iconify-icon>
-              <span class="hide-menu">User Management</span>
+              <span class="hide-menu">Kelola Pengguna</span>
+            </a>
+          </li>
+
+          <li class="sidebar-item">
+            <a class="sidebar-link" href="{{ route('suppliers.index') }}">
+              <iconify-icon icon="solar:shop-2-line-duotone"></iconify-icon>
+              <span class="hide-menu">Kelola Supplier</span>
+            </a>
+          </li>
+
+          <li class="sidebar-item">
+            <a class="sidebar-link" href="{{ route('customers.index') }}">
+              <iconify-icon icon="solar:users-group-rounded-line-duotone"></iconify-icon>
+              <span class="hide-menu">Kelola Customer</span>
             </a>
           </li>
 
           <li class="sidebar-item">
             <a class="sidebar-link" href="{{ route('warehouses.index') }}">
               <iconify-icon icon="solar:home-smile-line-duotone"></iconify-icon>
-              <span class="hide-menu">Manajemen Sekolah</span>
+              <span class="hide-menu">Kelola Sekolah</span>
             </a>
           </li>
 
           <li class="sidebar-item">
             <a class="sidebar-link" href="{{ route('locations.index') }}">
               <iconify-icon icon="solar:map-point-line-duotone"></iconify-icon>
-              <span class="hide-menu">Manajemen Lokasi</span>
+              <span class="hide-menu">Kelola Lokasi</span>
             </a>
           </li>
 
           <li class="sidebar-item">
             <a class="sidebar-link" href="{{ route('items.index') }}">
               <iconify-icon icon="solar:box-line-duotone"></iconify-icon>
-              <span class="hide-menu">Item Management</span>
+              <span class="hide-menu">Kelola Barang</span>
             </a>
           </li>
 
           <li class="sidebar-item">
             <a class="sidebar-link" href="{{ route('stocks.index') }}">
               <iconify-icon icon="solar:layers-line-duotone"></iconify-icon>
-              <span class="hide-menu">Stock Management</span>
+              <span class="hide-menu">Kelola Stok</span>
             </a>
           </li>
 
@@ -80,21 +93,21 @@
           <li class="sidebar-item">
             <a class="sidebar-link" href="{{ route('inbound.index') }}">
               <iconify-icon icon="solar:arrow-down-line-duotone"></iconify-icon>
-              <span class="hide-menu">Inbound</span>
+              <span class="hide-menu">Barang Masuk</span>
             </a>
           </li>
 
           <li class="sidebar-item">
             <a class="sidebar-link" href="{{ route('outbound.index') }}">
               <iconify-icon icon="solar:arrow-up-line-duotone"></iconify-icon>
-              <span class="hide-menu">Outbound</span>
+              <span class="hide-menu">Barang Keluar</span>
             </a>
           </li>
 
           <li class="sidebar-item">
             <a class="sidebar-link" href="{{ route('transfer.index') }}">
               <iconify-icon icon="solar:transfer-horizontal-line-duotone"></iconify-icon>
-              <span class="hide-menu">Transfer</span>
+              <span class="hide-menu">Pindah Barang</span>
             </a>
           </li>
 
@@ -117,24 +130,24 @@
           <li class="sidebar-item">
             <a class="sidebar-link" href="{{ route('tracking.index') }}">
               <iconify-icon icon="solar:map-point-search-line-duotone"></iconify-icon>
-              <span class="hide-menu">Tracking Pengiriman</span>
+              <span class="hide-menu">Lacak Pengiriman</span>
             </a>
           </li>
 
           <li class="sidebar-item">
             <a class="sidebar-link" href="{{ route('heatmap.index') }}">
               <iconify-icon icon="solar:graph-up-line-duotone"></iconify-icon>
-              <span class="hide-menu">Heatmap Analytics</span>
+              <span class="hide-menu">Peta Analitik</span>
             </a>
           </li>
 
-          <!-- Auth -->
+          <!-- Keluar -->
           <li>
             <span class="sidebar-divider lg"></span>
           </li>
           <li class="nav-small-cap">
             <iconify-icon icon="solar:menu-dots-linear" class="mini-icon"></iconify-icon>
-            <span class="hide-menu">Auth</span>
+            <span class="hide-menu">Keluar</span>
           </li>
 
           <li class="sidebar-item">

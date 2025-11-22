@@ -25,9 +25,10 @@ class TransactionService
         int $quantity,
         ?string $batch = null,
         ?string $expiredAt = null,
-        ?string $notes = null
+        ?string $notes = null,
+        ?int $supplierId = null
     ): Transaction {
-        return DB::transaction(function () use ($itemId, $toLocationId, $quantity, $batch, $expiredAt, $notes) {
+        return DB::transaction(function () use ($itemId, $toLocationId, $quantity, $batch, $expiredAt, $notes, $supplierId) {
             // Increase stock
             $this->stockService->increaseStock($itemId, $toLocationId, $quantity, $batch, $expiredAt);
 
@@ -41,6 +42,7 @@ class TransactionService
                 'quantity' => $quantity,
                 'batch' => $batch,
                 'user_id' => auth()->id(),
+                'supplier_id' => $supplierId,
                 'notes' => $notes,
             ]);
         });
@@ -53,9 +55,10 @@ class TransactionService
         int $itemId,
         int $fromLocationId,
         int $quantity,
-        ?string $notes = null
+        ?string $notes = null,
+        ?int $customerId = null
     ): Transaction {
-        return DB::transaction(function () use ($itemId, $fromLocationId, $quantity, $notes) {
+        return DB::transaction(function () use ($itemId, $fromLocationId, $quantity, $notes, $customerId) {
             // Decrease stock
             $this->stockService->decreaseStock($itemId, $fromLocationId, $quantity);
 
@@ -69,6 +72,7 @@ class TransactionService
                 'quantity' => $quantity,
                 'batch' => null,
                 'user_id' => auth()->id(),
+                'customer_id' => $customerId,
                 'notes' => $notes,
             ]);
         });

@@ -23,7 +23,7 @@ class InboundController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $query = \App\Models\Transaction::with(['item', 'toLocation.warehouse', 'user'])
+            $query = \App\Models\Transaction::with(['item', 'toLocation.warehouse', 'user', 'supplier'])
                 ->where('type', \App\Enums\TransactionType::INBOUND)
                 ->select('transactions.*');
 
@@ -36,6 +36,9 @@ class InboundController extends Controller
                 })
                 ->addColumn('location_name', function ($transaction) {
                     return $transaction->toLocation ? $transaction->toLocation->code . ' - ' . ($transaction->toLocation->warehouse->name ?? '') : '-';
+                })
+                ->addColumn('supplier_name', function ($transaction) {
+                    return $transaction->supplier->name ?? '-';
                 })
                 ->addColumn('user_name', function ($transaction) {
                     return $transaction->user->name ?? '-';
@@ -87,7 +90,8 @@ class InboundController extends Controller
     public function create()
     {
         $warehouses = \App\Models\Warehouse::all();
-        return view('features.inbound.create', compact('warehouses'));
+        $suppliers = \App\Models\Supplier::all();
+        return view('features.inbound.create', compact('warehouses', 'suppliers'));
     }
 
     /**
@@ -97,6 +101,7 @@ class InboundController extends Controller
     {
         $validated = $request->validate([
             'item_id' => 'required|exists:items,id',
+            'supplier_id' => 'required|exists:suppliers,id',
             'to_location_id' => 'required|exists:locations,id',
             'quantity' => 'required|integer|min:1',
             'batch' => 'nullable|string|max:255',
@@ -111,7 +116,8 @@ class InboundController extends Controller
                 $validated['quantity'],
                 $validated['batch'] ?? null,
                 $validated['expired_at'] ?? null,
-                $validated['notes'] ?? null
+                $validated['notes'] ?? null,
+                $validated['supplier_id'] ?? null
             );
 
             return response()->json([
@@ -175,6 +181,89 @@ class InboundController extends Controller
                     'id' => $location->id,
                     'code' => $location->code,
                     'path' => $path,
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'locations' => $locations,
+        ]);
+    }
+
+    /**
+     * Search items by name, SKU, or barcode
+     */
+    public function searchItems(Request $request)
+    {
+        $query = $request->input('query');
+
+        if (empty($query) || strlen($query) < 2) {
+            return response()->json([
+                'success' => true,
+                'items' => [],
+            ]);
+        }
+
+        // Search items by name, SKU, or barcode
+        $items = Item::where(function ($q) use ($query) {
+                $q->where('name', 'like', '%' . $query . '%')
+                  ->orWhere('sku', 'like', '%' . $query . '%')
+                  ->orWhere('barcode', 'like', '%' . $query . '%');
+            })
+            ->limit(20)
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'name' => $item->name,
+                    'sku' => $item->sku,
+                    'barcode' => $item->barcode,
+                    'unit' => $item->unit,
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'items' => $items,
+        ]);
+    }
+
+    /**
+     * Search locations by code, path, or warehouse name
+     */
+    public function searchLocations(Request $request)
+    {
+        $query = $request->input('query');
+
+        if (empty($query) || strlen($query) < 2) {
+            return response()->json([
+                'success' => true,
+                'locations' => [],
+            ]);
+        }
+
+        // Search locations by code, path, or warehouse name
+        $locations = Location::where('type', 'SLOT')
+            ->with(['warehouse', 'parent'])
+            ->where(function ($q) use ($query) {
+                $q->where('code', 'like', '%' . $query . '%')
+                  ->orWhereHas('warehouse', function ($wq) use ($query) {
+                      $wq->where('name', 'like', '%' . $query . '%');
+                  });
+            })
+            ->limit(20)
+            ->get()
+            ->map(function ($location) {
+                $path = $location->code;
+                if ($location->parent) {
+                    $path = $location->parent->code . ' > ' . $path;
+                }
+                return [
+                    'id' => $location->id,
+                    'code' => $location->code,
+                    'path' => $path,
+                    'warehouse_name' => $location->warehouse->name ?? '',
+                    'full_path' => ($location->warehouse->name ?? '') . ' - ' . $path,
                 ];
             });
 

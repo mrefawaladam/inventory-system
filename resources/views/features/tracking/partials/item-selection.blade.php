@@ -24,3 +24,41 @@
     </div>
 </div>
 
+<script>
+// Initialize Select2 for item selection
+(function() {
+    var checkSelect2 = function(attempts) {
+        attempts = attempts || 0;
+        if (typeof $.fn.select2 !== 'undefined') {
+            if ($('#select-item').length && !$('#select-item').hasClass('select2-hidden-accessible')) {
+                $('#select-item').select2({
+                    placeholder: '-- Pilih Item --',
+                    allowClear: true,
+                    width: '100%',
+                    language: {
+                        noResults: function() {
+                            return "Tidak ada hasil";
+                        },
+                        searching: function() {
+                            return "Mencari...";
+                        }
+                    }
+                });
+            }
+        } else if (attempts < 20) {
+            setTimeout(function() {
+                checkSelect2(attempts + 1);
+            }, 100);
+        }
+    };
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            checkSelect2();
+        });
+    } else {
+        checkSelect2();
+    }
+})();
+</script>
+

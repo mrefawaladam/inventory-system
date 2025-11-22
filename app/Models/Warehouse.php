@@ -16,7 +16,12 @@ class Warehouse extends Model
      */
     protected $fillable = [
         'name',
+        'recipient',
         'address',
+        'city',
+        'district',
+        'province',
+        'village',
         'latitude',
         'longitude',
         'description',

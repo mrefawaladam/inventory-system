@@ -20,6 +20,8 @@ class Transaction extends Model
         'quantity',
         'batch',
         'user_id',
+        'supplier_id',
+        'customer_id',
         'notes',
     ];
 
@@ -58,6 +60,22 @@ class Transaction extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Get the supplier for this transaction.
+     */
+    public function supplier(): BelongsTo
+    {
+        return $this->belongsTo(Supplier::class);
+    }
+
+    /**
+     * Get the customer for this transaction.
+     */
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class);
     }
 
     /**

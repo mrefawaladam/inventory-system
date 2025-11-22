@@ -22,22 +22,30 @@ class OutboundSeeder extends Seeder
             return;
         }
 
-        // Generate outbound records
-        for ($i = 0; $i < 12; $i++) {
+        // Generate outbound records dengan data yang jelas untuk demo
+        $statuses = [OutboundStatus::PENDING->value, OutboundStatus::COMPLETED->value, OutboundStatus::COMPLETED->value]; // Lebih banyak completed untuk demo
+        
+        for ($i = 0; $i < 8; $i++) {
             $customer = $customers->random();
             $user = $users->random();
-            $status = fake()->randomElement([OutboundStatus::PENDING->value, OutboundStatus::COMPLETED->value]);
+            $status = fake()->randomElement($statuses);
+            $date = fake()->dateTimeBetween('-1 month', 'now');
+
+            $updatedDate = clone $date;
+            if ($status === OutboundStatus::COMPLETED->value) {
+                $updatedDate->modify('+1 day');
+            }
 
             DB::table('outbound')->insert([
-                'outbound_code' => 'OUTB-' . now()->format('Ymd') . '-' . str_pad($i + 1, 4, '0', STR_PAD_LEFT),
+                'outbound_code' => 'OUTB-' . $date->format('Ymd') . '-' . str_pad($i + 1, 3, '0', STR_PAD_LEFT),
                 'customer_id' => $customer->id,
                 'created_by' => $user->id,
                 'status' => $status,
-                'created_at' => fake()->dateTimeBetween('-30 days', 'now'),
-                'updated_at' => now(),
+                'created_at' => $date,
+                'updated_at' => $updatedDate,
             ]);
         }
 
-        $this->command->info('Outbound records seeded successfully!');
+        $this->command->info('Outbound sarana sekolah seeded successfully!');
     }
 }

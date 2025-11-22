@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Warehouse;
 use App\Services\WarehouseService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Yajra\DataTables\Facades\DataTables;
 
 class WarehouseController extends Controller
@@ -25,14 +26,27 @@ class WarehouseController extends Controller
             $query = Warehouse::select('warehouses.*');
 
             return DataTables::of($query)
-                ->addColumn('coordinates', function ($warehouse) {
-                    if ($warehouse->latitude && $warehouse->longitude) {
-                        return number_format($warehouse->latitude, 6) . ', ' . number_format($warehouse->longitude, 6);
-                    }
-                    return '<span class="text-muted">Not set</span>';
-                })
                 ->editColumn('address', function ($warehouse) {
                     return $warehouse->address ?? '-';
+                })
+                ->editColumn('recipient', function ($warehouse) {
+                    return $warehouse->recipient ?? '-';
+                })
+                ->editColumn('city', function ($warehouse) {
+                    return $warehouse->city ?? '-';
+                })
+                ->editColumn('province', function ($warehouse) {
+                    return $warehouse->province ?? '-';
+                })
+                ->addColumn('location_info', function ($warehouse) {
+                    $info = [];
+                    if ($warehouse->city) {
+                        $info[] = $warehouse->city;
+                    }
+                    if ($warehouse->province) {
+                        $info[] = $warehouse->province;
+                    }
+                    return !empty($info) ? implode(', ', $info) : '-';
                 })
                 ->addColumn('action', function ($warehouse) {
                     return view('features.warehouses.partials.action-buttons', compact('warehouse'))->render();
@@ -40,7 +54,7 @@ class WarehouseController extends Controller
                 ->editColumn('created_at', function ($warehouse) {
                     return $warehouse->created_at->format('Y-m-d');
                 })
-                ->rawColumns(['coordinates', 'action'])
+                ->rawColumns(['action'])
                 ->make(true);
         }
 
@@ -53,16 +67,106 @@ class WarehouseController extends Controller
     }
 
     /**
+     * Get provinces from API
+     */
+    private function getProvinces()
+    {
+        $apiUrls = [
+            'https://api-regional-indonesia.vercel.app/api/provinces',
+            'https://wilayah.id/api/provinces.json',
+            'https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json'
+        ];
+
+        foreach ($apiUrls as $url) {
+            try {
+                $response = Http::timeout(10)->get($url);
+                
+                if ($response->successful()) {
+                    $data = $response->json();
+                    
+                    // Handle different response formats
+                    $provinces = [];
+                    
+                    // Format 1: {status: true, data: [...]}
+                    if (isset($data['data']) && is_array($data['data'])) {
+                        $provinces = $data['data'];
+                    }
+                    // Format 2: Direct array [...]
+                    elseif (is_array($data) && isset($data[0]) && is_array($data[0])) {
+                        $provinces = $data;
+                    }
+                    // Format 3: Object with numeric keys
+                    elseif (is_array($data) && !isset($data[0]) && !empty($data)) {
+                        $provinces = array_values($data);
+                    }
+                    
+                    if (!empty($provinces)) {
+                        // Transform to consistent format
+                        $formatted = [];
+                        foreach ($provinces as $province) {
+                            if (!is_array($province)) {
+                                continue;
+                            }
+                            
+                            $id = $province['id'] ?? $province['code'] ?? $province['kode'] ?? null;
+                            $name = $province['name'] ?? $province['nama'] ?? '';
+                            
+                            // Skip if missing required fields
+                            if (empty($id) || empty($name)) {
+                                continue;
+                            }
+                            
+                            $formatted[] = [
+                                'id' => (string)trim($id), // Ensure string for consistency
+                                'name' => trim(preg_replace('/\s+/', ' ', $name)) // Remove newlines and normalize spaces
+                            ];
+                        }
+                        
+                        // Sort by name
+                        usort($formatted, function($a, $b) {
+                            return strcmp($a['name'], $b['name']);
+                        });
+                        
+                        if (count($formatted) > 0) {
+                            \Log::info("Successfully fetched " . count($formatted) . " provinces from {$url}");
+                            return $formatted;
+                        }
+                    }
+                } else {
+                    \Log::warning("API {$url} returned status: " . $response->status());
+                }
+            } catch (\Exception $e) {
+                \Log::warning("Failed to fetch provinces from {$url}: " . $e->getMessage());
+                continue;
+            }
+        }
+        
+        \Log::error("All province APIs failed, returning empty array");
+        // Return empty array if all APIs fail
+        return [];
+    }
+
+    /**
      * Show the form for creating a new resource.
      */
     public function create()
     {
+        $provinces = $this->getProvinces();
+        
+        \Log::info("Create form - Provinces count: " . count($provinces));
+        if (count($provinces) > 0) {
+            \Log::info("Sample provinces: " . json_encode(array_slice($provinces, 0, 3)));
+        } else {
+            \Log::warning("No provinces loaded for create form!");
+        }
+        
         return response()->json([
             'html' => view('features.warehouses.partials.form', [
                 'warehouse' => null,
                 'formAction' => route('warehouses.store'),
                 'formMethod' => 'POST',
-                'modalTitle' => 'Tambah Sekolah'
+                'modalTitle' => 'Tambah Sekolah',
+                'provinces' => $provinces ?? []
             ])->render()
         ]);
     }
@@ -120,12 +224,22 @@ class WarehouseController extends Controller
      */
     public function edit(Warehouse $warehouse)
     {
+        $provinces = $this->getProvinces();
+        
+        \Log::info("Edit form - Provinces count: " . count($provinces));
+        if (count($provinces) > 0) {
+            \Log::info("Sample provinces: " . json_encode(array_slice($provinces, 0, 3)));
+        } else {
+            \Log::warning("No provinces loaded for edit form!");
+        }
+        
         return response()->json([
             'html' => view('features.warehouses.partials.form', [
                 'warehouse' => $warehouse,
                 'formAction' => route('warehouses.update', $warehouse),
                 'formMethod' => 'PUT',
-                'modalTitle' => 'Edit Sekolah'
+                'modalTitle' => 'Edit Sekolah',
+                'provinces' => $provinces ?? []
             ])->render()
         ]);
     }

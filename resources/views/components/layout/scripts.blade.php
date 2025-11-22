@@ -10,6 +10,9 @@
 <!-- solar icons -->
 <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
 
+<!-- Select2 JS -->
+<script src="{{ asset('assets/libs/select2/dist/js/select2.min.js') }}"></script>
+
 <!-- Helper Scripts -->
 <script src="{{ asset('assets/js/helpers/toast.js') }}"></script>
 <script src="{{ asset('assets/js/helpers/modal.js') }}"></script>

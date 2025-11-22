@@ -1,17 +1,46 @@
 <div class="row">
     <div class="col-md-6 mb-3">
-        <label class="form-label fw-bold">Nama</label>
+        <label class="form-label fw-bold">Nama Sekolah Rakyat</label>
         <p class="mb-0">{{ $warehouse->name }}</p>
     </div>
     <div class="col-md-6 mb-3">
-        <label class="form-label fw-bold">Tanggal Dibuat</label>
-        <p class="mb-0">{{ $warehouse->created_at->format('Y-m-d H:i:s') }}</p>
+        <label class="form-label fw-bold">Penerima / Instansi</label>
+        <p class="mb-0">{{ $warehouse->recipient ?? '-' }}</p>
     </div>
 </div>
 
 <div class="mb-3">
-    <label class="form-label fw-bold">Alamat</label>
+    <label class="form-label fw-bold">Alamat Jalan</label>
     <p class="mb-0">{{ $warehouse->address ?? '-' }}</p>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <label class="form-label fw-bold">Provinsi</label>
+        <p class="mb-0">{{ $warehouse->province ?? '-' }}</p>
+    </div>
+    <div class="col-md-6 mb-3">
+        <label class="form-label fw-bold">Kota/Kabupaten</label>
+        <p class="mb-0">{{ $warehouse->city ?? '-' }}</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <label class="form-label fw-bold">Kecamatan</label>
+        <p class="mb-0">{{ $warehouse->district ?? '-' }}</p>
+    </div>
+    <div class="col-md-6 mb-3">
+        <label class="form-label fw-bold">Desa/Kelurahan</label>
+        <p class="mb-0">{{ $warehouse->village ?? '-' }}</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <label class="form-label fw-bold">Tanggal Dibuat</label>
+        <p class="mb-0">{{ $warehouse->created_at->format('Y-m-d H:i:s') }}</p>
+    </div>
 </div>
 
 @if($warehouse->latitude && $warehouse->longitude)

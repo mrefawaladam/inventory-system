@@ -475,26 +475,24 @@ $(document).ready(function() {
                     }
 
                     timeBasedChart = new Chart(ctx, {
-                        type: 'line',
+                        type: 'bar',
                         data: {
                             labels: labels,
                             datasets: [
                                 {
                                     label: 'Jumlah Transaksi',
                                     data: counts,
+                                    backgroundColor: 'rgba(13, 110, 253, 0.8)',
                                     borderColor: 'rgb(13, 110, 253)',
-                                    backgroundColor: 'rgba(13, 110, 253, 0.1)',
-                                    tension: 0.4,
-                                    fill: true,
+                                    borderWidth: 1,
                                     yAxisID: 'y'
                                 },
                                 {
                                     label: 'Total Quantity',
                                     data: quantities,
+                                    backgroundColor: 'rgba(220, 53, 69, 0.8)',
                                     borderColor: 'rgb(220, 53, 69)',
-                                    backgroundColor: 'rgba(220, 53, 69, 0.1)',
-                                    tension: 0.4,
-                                    fill: true,
+                                    borderWidth: 1,
                                     yAxisID: 'y1'
                                 }
                             ]

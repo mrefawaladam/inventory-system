@@ -73,6 +73,71 @@
             -webkit-overflow-scrolling: touch;
         }
     }
+    
+    /* DataTable Processing/Loading Indicator */
+    .dataTables_processing {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.9);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 15px;
+        font-size: 16px;
+        font-weight: 500;
+        color: #333;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .dataTables_processing .spinner-border {
+        width: 3rem;
+        height: 3rem;
+        border-width: 0.3em;
+    }
+    
+    .dataTables_wrapper {
+        position: relative;
+    }
+    
+    /* Loading overlay for table body */
+    #items-table tbody {
+        position: relative;
+    }
+    
+    .table-loading-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 15px;
+        z-index: 10;
+        border-radius: 4px;
+    }
+    
+    .table-loading-overlay .spinner-border {
+        width: 3rem;
+        height: 3rem;
+        border-width: 0.3em;
+    }
+    
+    .table-loading-overlay .loading-text {
+        font-size: 16px;
+        font-weight: 500;
+        color: #333;
+    }
 </style>
 @endpush
 
@@ -149,7 +214,14 @@ $(document).ready(function() {
     const itemsTable = $('#items-table').DataTable({
         processing: true,
         serverSide: true,
-        ajax: "{{ route('items.index') }}",
+        ajax: {
+            url: "{{ route('items.index') }}",
+            dataSrc: function(json) {
+                // Remove loading overlay when data is loaded
+                $('#items-table tbody').find('.table-loading-overlay').remove();
+                return json.data;
+            }
+        },
         columns: [
             { data: 'id', name: 'id' },
             { data: 'image_preview', name: 'image_preview', orderable: false, searchable: false },
@@ -170,7 +242,7 @@ $(document).ready(function() {
         autoWidth: false,
         order: [[0, 'desc']],
         language: {
-            processing: '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>',
+            processing: '<div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem; border-width: 0.3em;"></div><div class="mt-3" style="font-size: 16px; font-weight: 500;">Memuat data...</div>',
             lengthMenu: "Tampilkan _MENU_ entri",
             zeroRecords: "Tidak ada data yang ditemukan",
             info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ entri",
@@ -182,7 +254,34 @@ $(document).ready(function() {
                 last: "Terakhir",
                 next: "Selanjutnya",
                 previous: "Sebelumnya"
+            },
+            loadingRecords: "Memuat data...",
+            emptyTable: "Tidak ada data yang tersedia"
+        }
+    });
+    
+    // Add loading overlay to table body when loading starts
+    itemsTable.on('processing.dt', function(e, settings, processing) {
+        if (processing) {
+            // Add loading overlay to tbody
+            const tbody = $('#items-table tbody');
+            if (tbody.find('.table-loading-overlay').length === 0) {
+                tbody.append(`
+                    <tr class="table-loading-overlay-row">
+                        <td colspan="11" style="position: relative; height: 300px; padding: 0;">
+                            <div class="table-loading-overlay">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <div class="loading-text">Memuat data barang...</div>
+                            </div>
+                        </td>
+                    </tr>
+                `);
             }
+        } else {
+            // Remove loading overlay when done
+            $('#items-table tbody').find('.table-loading-overlay-row').remove();
         }
     });
 

@@ -22,9 +22,9 @@ enum LocationType: string
     public function label(): string
     {
         return match($this) {
-            self::ZONE => 'Zone',
-            self::RACK => 'Rack',
-            self::SLOT => 'Slot',
+            self::ZONE => 'Area',
+            self::RACK => 'Rak',
+            self::SLOT => 'Tempat',
         };
     }
 }

@@ -7,11 +7,11 @@
         <label class="form-label fw-bold">Tipe</label>
         <p class="mb-0">
             @if($location->type->value === 'ZONE')
-                <span class="badge" style="background-color: #0d6efd; color: #fff;">Zone</span>
+                <span class="badge" style="background-color: #0d6efd; color: #fff;">Area</span>
             @elseif($location->type->value === 'RACK')
-                <span class="badge" style="background-color: #ffc107; color: #000;">Rack</span>
+                <span class="badge" style="background-color: #ffc107; color: #000;">Rak</span>
             @else
-                <span class="badge" style="background-color: #198754; color: #fff;">Slot</span>
+                <span class="badge" style="background-color: #198754; color: #fff;">Tempat</span>
             @endif
         </p>
     </div>

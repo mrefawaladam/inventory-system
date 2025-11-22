@@ -23,14 +23,27 @@
     </div>
 </div>
 
+@if($item)
 <script>
 // Pass data to JavaScript
 window.itemHistoryData = {
     itemId: {{ $itemId ?? 'null' }},
-    history: @json($history),
-    warehouses: @json($warehousesMap),
-    itemDetails: @json($itemDetails),
-    filters: @json($filters)
+    history: @json($history ?? []),
+    warehouses: @json($warehousesMap ?? []),
+    itemDetails: @json($itemDetails ?? null),
+    filters: @json($filters ?? [])
 };
 </script>
+@else
+<script>
+// Initialize empty data
+window.itemHistoryData = {
+    itemId: null,
+    history: [],
+    warehouses: [],
+    itemDetails: null,
+    filters: {}
+};
+</script>
+@endif
 

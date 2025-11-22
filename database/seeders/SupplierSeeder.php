@@ -13,10 +13,12 @@ class SupplierSeeder extends Seeder
      */
     public function run(): void
     {
+        // Supplier untuk sarana sekolah
         $suppliers = [
-            ['name' => 'PT. Supplier Utama', 'phone' => '081234567890', 'address' => 'Jl. Raya Industri No. 123, Jakarta'],
-            ['name' => 'CV. Distributor Sejahtera', 'phone' => '081234567891', 'address' => 'Jl. Gatot Subroto No. 456, Bandung'],
-            ['name' => 'PT. Pemasok Terpercaya', 'phone' => '081234567892', 'address' => 'Jl. Sudirman No. 789, Surabaya'],
+            ['name' => 'PT. Supplier Sarana Sekolah Indonesia', 'phone' => '081234567890', 'address' => 'Jl. Raya Industri No. 123, Jakarta'],
+            ['name' => 'CV. Distributor Alat Pendidikan', 'phone' => '081234567891', 'address' => 'Jl. Gatot Subroto No. 456, Bandung'],
+            ['name' => 'PT. Pemasok Peralatan Sekolah', 'phone' => '081234567892', 'address' => 'Jl. Sudirman No. 789, Surabaya'],
+            ['name' => 'Kemensos - Kementerian Sosial', 'phone' => '081234567893', 'address' => 'Jl. Salemba Raya No. 28, Jakarta Pusat'],
         ];
 
         foreach ($suppliers as $supplier) {
@@ -29,10 +31,18 @@ class SupplierSeeder extends Seeder
             ]);
         }
 
-        // Generate additional random suppliers
-        for ($i = 0; $i < 7; $i++) {
+        // Generate additional suppliers untuk sarana sekolah
+        $additionalSuppliers = [
+            'PT. Produsen Perabot Sekolah',
+            'CV. Distributor Sarana Pendidikan',
+            'PT. Pemasok Alat Tulis Sekolah',
+            'CV. Supplier Peralatan Kelas',
+            'PT. Distributor Furniture Sekolah',
+        ];
+
+        foreach ($additionalSuppliers as $supplierName) {
             DB::table('suppliers')->insert([
-                'name' => fake()->company(),
+                'name' => $supplierName,
                 'phone' => fake()->phoneNumber(),
                 'address' => fake()->address(),
                 'created_at' => now(),
@@ -40,6 +50,6 @@ class SupplierSeeder extends Seeder
             ]);
         }
 
-        $this->command->info('Suppliers seeded successfully!');
+        $this->command->info('Suppliers untuk sarana sekolah seeded successfully!');
     }
 }

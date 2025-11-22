@@ -24,7 +24,7 @@ class OutboundController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $query = \App\Models\Transaction::with(['item', 'fromLocation.warehouse', 'user'])
+            $query = \App\Models\Transaction::with(['item', 'fromLocation.warehouse', 'user', 'customer'])
                 ->where('type', \App\Enums\TransactionType::OUTBOUND)
                 ->select('transactions.*');
 
@@ -37,6 +37,9 @@ class OutboundController extends Controller
                 })
                 ->addColumn('location_name', function ($transaction) {
                     return $transaction->fromLocation ? $transaction->fromLocation->code . ' - ' . ($transaction->fromLocation->warehouse->name ?? '') : '-';
+                })
+                ->addColumn('customer_name', function ($transaction) {
+                    return $transaction->customer->name ?? '-';
                 })
                 ->addColumn('user_name', function ($transaction) {
                     return $transaction->user->name ?? '-';
@@ -88,7 +91,8 @@ class OutboundController extends Controller
     public function create()
     {
         $warehouses = \App\Models\Warehouse::all();
-        return view('features.outbound.create', compact('warehouses'));
+        $customers = \App\Models\Customer::all();
+        return view('features.outbound.create', compact('warehouses', 'customers'));
     }
 
     /**
@@ -98,6 +102,7 @@ class OutboundController extends Controller
     {
         $validated = $request->validate([
             'item_id' => 'required|exists:items,id',
+            'customer_id' => 'required|exists:customers,id',
             'from_location_id' => 'required|exists:locations,id',
             'quantity' => 'required|integer|min:1',
             'notes' => 'nullable|string',
@@ -120,7 +125,8 @@ class OutboundController extends Controller
                 $validated['item_id'],
                 $validated['from_location_id'],
                 $validated['quantity'],
-                $validated['notes'] ?? null
+                $validated['notes'] ?? null,
+                $validated['customer_id'] ?? null
             );
 
             return response()->json([
@@ -278,6 +284,51 @@ class OutboundController extends Controller
         return response()->json([
             'success' => true,
             'items' => $items,
+        ]);
+    }
+
+    /**
+     * Search locations by code, path, or warehouse name
+     */
+    public function searchLocations(Request $request)
+    {
+        $query = $request->input('query');
+
+        if (empty($query) || strlen($query) < 2) {
+            return response()->json([
+                'success' => true,
+                'locations' => [],
+            ]);
+        }
+
+        // Search locations by code, path, or warehouse name
+        $locations = Location::where('type', 'SLOT')
+            ->with(['warehouse', 'parent'])
+            ->where(function ($q) use ($query) {
+                $q->where('code', 'like', '%' . $query . '%')
+                  ->orWhereHas('warehouse', function ($wq) use ($query) {
+                      $wq->where('name', 'like', '%' . $query . '%');
+                  });
+            })
+            ->limit(20)
+            ->get()
+            ->map(function ($location) {
+                $path = $location->code;
+                if ($location->parent) {
+                    $path = $location->parent->code . ' > ' . $path;
+                }
+                return [
+                    'id' => $location->id,
+                    'code' => $location->code,
+                    'path' => $path,
+                    'warehouse_name' => $location->warehouse->name ?? '',
+                    'full_path' => ($location->warehouse->name ?? '') . ' - ' . $path,
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'locations' => $locations,
         ]);
     }
 }

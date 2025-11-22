@@ -12,6 +12,9 @@
 
   <!-- Core Css -->
   <link rel="stylesheet" href="{{ asset('assets/css/styles.css') }}" />
+  
+  <!-- Select2 CSS -->
+  <link rel="stylesheet" href="{{ asset('assets/libs/select2/dist/css/select2.min.css') }}" />
 
   <!-- CSRF Token -->
   <meta name="csrf-token" content="{{ csrf_token() }}">

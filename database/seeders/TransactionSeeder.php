@@ -33,71 +33,93 @@ class TransactionSeeder extends Seeder
             return;
         }
 
-        // Generate INBOUND transactions
-        for ($i = 0; $i < 20; $i++) {
+        // Generate INBOUND transactions (penerimaan dari supplier)
+        $inboundNotes = [
+            'Penerimaan sarana sekolah dari supplier',
+            'Penerimaan barang baru untuk distribusi',
+            'Stock masuk dari Kemensos',
+            'Penerimaan peralatan sekolah',
+        ];
+
+        for ($i = 0; $i < 12; $i++) {
             $item = $items->random();
             $toLocation = $locations->random();
             $user = $users->random();
+            $date = fake()->dateTimeBetween('-2 months', 'now');
 
             DB::table('transactions')->insert([
-                'transaction_code' => 'IN-' . now()->format('Ymd') . '-' . str_pad($i + 1, 4, '0', STR_PAD_LEFT),
+                'transaction_code' => 'IN-' . $date->format('Ymd') . '-' . str_pad($i + 1, 3, '0', STR_PAD_LEFT),
                 'type' => TransactionType::INBOUND->value,
                 'item_id' => $item->id,
                 'from_location_id' => null,
                 'to_location_id' => $toLocation->id,
-                'quantity' => fake()->numberBetween(10, 100),
-                'batch' => 'BATCH-' . fake()->date('Ymd') . '-' . strtoupper(fake()->lexify('???')),
+                'quantity' => fake()->numberBetween(20, 100),
+                'batch' => 'SR-' . $date->format('Ymd') . '-' . strtoupper(fake()->lexify('???')),
                 'user_id' => $user->id,
-                'notes' => fake()->optional(0.7)->sentence(),
-                'created_at' => fake()->dateTimeBetween('-30 days', 'now'),
-                'updated_at' => now(),
+                'notes' => fake()->randomElement($inboundNotes) . ' - ' . $item->name,
+                'created_at' => $date,
+                'updated_at' => $date,
             ]);
         }
 
-        // Generate OUTBOUND transactions
-        for ($i = 0; $i < 15; $i++) {
+        // Generate OUTBOUND transactions (pengiriman ke sekolah)
+        $outboundNotes = [
+            'Pengiriman sarana ke sekolah',
+            'Distribusi peralatan sekolah',
+            'Pengiriman ke Sekolah Rakyat',
+        ];
+
+        for ($i = 0; $i < 10; $i++) {
             $item = $items->random();
             $fromLocation = $locations->random();
             $user = $users->random();
+            $date = fake()->dateTimeBetween('-1 month', 'now');
 
             DB::table('transactions')->insert([
-                'transaction_code' => 'OUT-' . now()->format('Ymd') . '-' . str_pad($i + 1, 4, '0', STR_PAD_LEFT),
+                'transaction_code' => 'OUT-' . $date->format('Ymd') . '-' . str_pad($i + 1, 3, '0', STR_PAD_LEFT),
                 'type' => TransactionType::OUTBOUND->value,
                 'item_id' => $item->id,
                 'from_location_id' => $fromLocation->id,
                 'to_location_id' => null,
-                'quantity' => fake()->numberBetween(5, 50),
+                'quantity' => fake()->numberBetween(5, 30),
                 'batch' => null,
                 'user_id' => $user->id,
-                'notes' => fake()->optional(0.7)->sentence(),
-                'created_at' => fake()->dateTimeBetween('-30 days', 'now'),
-                'updated_at' => now(),
+                'notes' => fake()->randomElement($outboundNotes) . ' - ' . $item->name,
+                'created_at' => $date,
+                'updated_at' => $date,
             ]);
         }
 
-        // Generate TRANSFER transactions
-        for ($i = 0; $i < 10; $i++) {
+        // Generate TRANSFER transactions (pemindahan antar lokasi)
+        $transferNotes = [
+            'Pemindahan stock ke zona lain',
+            'Reorganisasi lokasi penyimpanan',
+            'Transfer untuk optimasi ruang',
+        ];
+
+        for ($i = 0; $i < 5; $i++) {
             $item = $items->random();
             $fromLocation = $locations->random();
             $availableLocations = $locations->where('id', '!=', $fromLocation->id);
             $toLocation = $availableLocations->isNotEmpty() ? $availableLocations->random() : $fromLocation;
             $user = $users->random();
+            $date = fake()->dateTimeBetween('-3 weeks', 'now');
 
             DB::table('transactions')->insert([
-                'transaction_code' => 'TRF-' . now()->format('Ymd') . '-' . str_pad($i + 1, 4, '0', STR_PAD_LEFT),
+                'transaction_code' => 'TRF-' . $date->format('Ymd') . '-' . str_pad($i + 1, 3, '0', STR_PAD_LEFT),
                 'type' => TransactionType::TRANSFER->value,
                 'item_id' => $item->id,
                 'from_location_id' => $fromLocation->id,
                 'to_location_id' => $toLocation->id,
-                'quantity' => fake()->numberBetween(5, 30),
+                'quantity' => fake()->numberBetween(5, 20),
                 'batch' => null,
                 'user_id' => $user->id,
-                'notes' => fake()->optional(0.7)->sentence(),
-                'created_at' => fake()->dateTimeBetween('-30 days', 'now'),
-                'updated_at' => now(),
+                'notes' => fake()->randomElement($transferNotes) . ' - ' . $item->name,
+                'created_at' => $date,
+                'updated_at' => $date,
             ]);
         }
 
-        $this->command->info('Transactions seeded successfully!');
+        $this->command->info('Transaksi sarana sekolah seeded successfully!');
     }
 }

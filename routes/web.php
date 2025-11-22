@@ -15,7 +15,17 @@ use App\Http\Controllers\TransferController;
 use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\TrackingController;
+use App\Http\Controllers\Api\LocationController as ApiLocationController;
 use Illuminate\Support\Facades\Route;
+
+// Public Routes (No authentication required)
+Route::get('/', [TrackingController::class, 'landing'])->name('landing');
+
+// Public Tracking Routes (No login required)
+Route::prefix('track')->name('public.')->group(function () {
+    Route::get('/', [TrackingController::class, 'publicTracking'])->name('tracking');
+    Route::get('/routes', [TrackingController::class, 'getPublicRoutes'])->name('tracking.routes');
+});
 
 // Authentication Routes (Guest only)
 Route::middleware('guest')->group(function () {
@@ -37,10 +47,6 @@ Route::middleware('auth')->post('/logout', [LoginController::class, 'logout'])->
 
 // Protected Routes
 Route::middleware(['auth', 'session.timeout'])->group(function () {
-    Route::get('/', function () {
-        return redirect()->route('dashboard');
-    });
-
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::prefix('chat')->name('chat.')->group(function () {
@@ -54,12 +60,26 @@ Route::middleware(['auth', 'session.timeout'])->group(function () {
     Route::post('users/{user}/assign-permission', [UserController::class, 'assignPermission'])->name('users.assign-permission');
     Route::delete('users/{user}/permissions/{permission}', [UserController::class, 'removePermission'])->name('users.remove-permission');
 
+    // Supplier Management Routes
+    Route::resource('suppliers', \App\Http\Controllers\SupplierController::class);
+
+    // Customer Management Routes
+    Route::resource('customers', \App\Http\Controllers\CustomerController::class);
+
     // Warehouse Management Routes
     Route::resource('warehouses', WarehouseController::class);
+    
+    // API Routes for Location Cascading (using third party API)
+    Route::prefix('api')->name('api.')->group(function () {
+        Route::get('provinces', [ApiLocationController::class, 'getProvinces'])->name('provinces');
+        Route::get('cities', [ApiLocationController::class, 'getCitiesByProvince'])->name('cities');
+        Route::get('districts', [ApiLocationController::class, 'getDistrictsByCity'])->name('districts');
+        Route::get('villages', [ApiLocationController::class, 'getVillagesByDistrict'])->name('villages');
+    });
 
     // Location Management Routes
-    Route::resource('locations', LocationController::class);
     Route::get('locations/get-by-warehouse', [LocationController::class, 'getByWarehouse'])->name('locations.get-by-warehouse');
+    Route::resource('locations', LocationController::class);
 
     // Item Management Routes
     Route::resource('items', ItemController::class);
@@ -75,6 +95,8 @@ Route::middleware(['auth', 'session.timeout'])->group(function () {
     Route::prefix('inbound')->name('inbound.')->group(function () {
         Route::get('get-item-by-barcode', [InboundController::class, 'getItemByBarcode'])->name('getItemByBarcode');
         Route::get('get-locations-by-warehouse', [InboundController::class, 'getLocationsByWarehouse'])->name('getLocationsByWarehouse');
+        Route::get('search-items', [InboundController::class, 'searchItems'])->name('searchItems');
+        Route::get('search-locations', [InboundController::class, 'searchLocations'])->name('searchLocations');
     });
     Route::resource('inbound', InboundController::class)->except(['show', 'edit', 'update', 'destroy']);
 
@@ -83,6 +105,7 @@ Route::middleware(['auth', 'session.timeout'])->group(function () {
         Route::get('get-item-by-barcode', [OutboundController::class, 'getItemByBarcode'])->name('getItemByBarcode');
         Route::get('get-locations-by-warehouse', [OutboundController::class, 'getLocationsByWarehouse'])->name('getLocationsByWarehouse');
         Route::get('search-items', [OutboundController::class, 'searchItems'])->name('searchItems');
+        Route::get('search-locations', [OutboundController::class, 'searchLocations'])->name('searchLocations');
     });
     Route::resource('outbound', OutboundController::class)->except(['show', 'edit', 'update', 'destroy']);
 
@@ -91,6 +114,8 @@ Route::middleware(['auth', 'session.timeout'])->group(function () {
         Route::get('get-item-by-barcode', [TransferController::class, 'getItemByBarcode'])->name('getItemByBarcode');
         Route::get('get-location-by-code', [TransferController::class, 'getLocationByCode'])->name('getLocationByCode');
         Route::get('get-locations-by-warehouse', [TransferController::class, 'getLocationsByWarehouse'])->name('getLocationsByWarehouse');
+        Route::get('search-items', [TransferController::class, 'searchItems'])->name('searchItems');
+        Route::get('search-locations', [TransferController::class, 'searchLocations'])->name('searchLocations');
     });
     Route::resource('transfer', TransferController::class)->except(['show', 'edit', 'update', 'destroy']);
 

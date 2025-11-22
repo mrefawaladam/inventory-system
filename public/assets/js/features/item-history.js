@@ -10,22 +10,30 @@ $(document).ready(function() {
     // Initialize map
     function initHistoryMap() {
         if (typeof L === 'undefined') {
-            console.error('Leaflet library not loaded');
             return;
         }
 
-        if (!window.itemHistoryData || !window.itemHistoryData.warehouses) {
+        if (!window.itemHistoryData) {
             return;
         }
 
-        // Default center
+        // Check if map already exists
+        if (historyMap) {
+            historyMap.remove();
+            historyMap = null;
+        }
+
+        // Default center (Jakarta)
         let defaultLat = -6.2088;
         let defaultLng = 106.8456;
 
-        if (window.itemHistoryData.warehouses.length > 0) {
+        // Use warehouse center if available
+        if (window.itemHistoryData.warehouses && window.itemHistoryData.warehouses.length > 0) {
             const firstWarehouse = window.itemHistoryData.warehouses[0];
-            defaultLat = firstWarehouse.latitude;
-            defaultLng = firstWarehouse.longitude;
+            if (firstWarehouse.latitude && firstWarehouse.longitude) {
+                defaultLat = parseFloat(firstWarehouse.latitude);
+                defaultLng = parseFloat(firstWarehouse.longitude);
+            }
         }
 
         // Initialize map
@@ -47,13 +55,19 @@ $(document).ready(function() {
 
     // Add warehouse markers
     function addWarehouseMarkers() {
-        if (!historyMap || !window.itemHistoryData || !window.itemHistoryData.warehouses) return;
+        if (!historyMap || !window.itemHistoryData) return;
+        
+        if (!window.itemHistoryData.warehouses || window.itemHistoryData.warehouses.length === 0) {
+            return;
+        }
 
         warehouseMarkers.forEach(marker => historyMap.removeLayer(marker));
         warehouseMarkers = [];
 
         window.itemHistoryData.warehouses.forEach(function(warehouse) {
-            const marker = L.marker([warehouse.latitude, warehouse.longitude], {
+            if (!warehouse.latitude || !warehouse.longitude) return;
+            
+            const marker = L.marker([parseFloat(warehouse.latitude), parseFloat(warehouse.longitude)], {
                 icon: L.icon({
                     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png',
                     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
@@ -90,11 +104,17 @@ $(document).ready(function() {
     // Add single route to map
     function addRoute(route, isActive = false) {
         if (!historyMap) return;
-
-        const fromLat = route.from.latitude;
-        const fromLng = route.from.longitude;
-        const toLat = route.to.latitude;
-        const toLng = route.to.longitude;
+        
+        if (!route.from || !route.to) return;
+        
+        const fromLat = parseFloat(route.from.latitude);
+        const fromLng = parseFloat(route.from.longitude);
+        const toLat = parseFloat(route.to.latitude);
+        const toLng = parseFloat(route.to.longitude);
+        
+        if (isNaN(fromLat) || isNaN(fromLng) || isNaN(toLat) || isNaN(toLng)) {
+            return;
+        }
 
         const status = route.delivery_status || 'pending';
         const color = getStatusColor(status);
@@ -158,10 +178,12 @@ $(document).ready(function() {
 
     // Clear all routes
     function clearHistoryMap() {
+        if (!historyMap) return;
+        
         historyPolylines.forEach(group => {
-            historyMap.removeLayer(group.polyline);
-            historyMap.removeLayer(group.originMarker);
-            historyMap.removeLayer(group.destMarker);
+            if (group.polyline) historyMap.removeLayer(group.polyline);
+            if (group.originMarker) historyMap.removeLayer(group.originMarker);
+            if (group.destMarker) historyMap.removeLayer(group.destMarker);
         });
         historyPolylines = [];
         historyMarkers = [];
@@ -169,9 +191,14 @@ $(document).ready(function() {
 
     // Show all routes
     function showAllRoutes() {
+        if (!historyMap) return;
+        
         clearHistoryMap();
 
-        if (!window.itemHistoryData || !window.itemHistoryData.history) return;
+        if (!window.itemHistoryData || !window.itemHistoryData.history || window.itemHistoryData.history.length === 0) {
+            $('#history-count').text('0');
+            return;
+        }
 
         window.itemHistoryData.history.forEach(function(route) {
             addRoute(route, false);
@@ -288,17 +315,26 @@ $(document).ready(function() {
                     location.reload();
                 }
             },
-            error: function() {
-                console.error('Error loading history');
+            error: function(xhr) {
+                if (window.Toast) {
+                    window.Toast.error('Gagal memuat history pengiriman');
+                }
             }
         });
     }
 
-    // Initialize
-    if ($('#item-history-map').length) {
+    // Initialize map only if item is selected and data is available
+    if ($('#item-history-map').length && window.itemHistoryData && window.itemHistoryData.itemId) {
         initHistoryMap();
-        addWarehouseMarkers();
-        showAllRoutes();
+        if (window.itemHistoryData.warehouses && window.itemHistoryData.warehouses.length > 0) {
+            addWarehouseMarkers();
+        }
+        if (window.itemHistoryData.history && window.itemHistoryData.history.length > 0) {
+            showAllRoutes();
+        } else {
+            // Show message if no history
+            $('#history-count').text('0');
+        }
     }
 
     // Timeline item click

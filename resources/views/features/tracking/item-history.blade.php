@@ -82,7 +82,7 @@
 <!-- Item Selection & Info -->
 @include('features.tracking.partials.item-selection')
 
-@if($item)
+@if($item && $itemId)
     <!-- Item Details -->
     @include('features.tracking.partials.item-details')
 

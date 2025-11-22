@@ -17,33 +17,30 @@ document.addEventListener('DOMContentLoaded', function() {
   
   const ctx = document.getElementById('transactionChart').getContext('2d');
   new Chart(ctx, {
-    type: 'line',
+    type: 'bar',
     data: {
       labels: chartData.map(item => item.label),
       datasets: [
         {
           label: 'Inbound',
           data: chartData.map(item => item.inbound),
+          backgroundColor: 'rgba(13, 110, 253, 0.8)',
           borderColor: 'rgb(13, 110, 253)',
-          backgroundColor: 'rgba(13, 110, 253, 0.1)',
-          tension: 0.4,
-          fill: true
+          borderWidth: 1
         },
         {
           label: 'Outbound',
           data: chartData.map(item => item.outbound),
+          backgroundColor: 'rgba(220, 53, 69, 0.8)',
           borderColor: 'rgb(220, 53, 69)',
-          backgroundColor: 'rgba(220, 53, 69, 0.1)',
-          tension: 0.4,
-          fill: true
+          borderWidth: 1
         },
         {
           label: 'Transfer',
           data: chartData.map(item => item.transfer),
+          backgroundColor: 'rgba(13, 202, 240, 0.8)',
           borderColor: 'rgb(13, 202, 240)',
-          backgroundColor: 'rgba(13, 202, 240, 0.1)',
-          tension: 0.4,
-          fill: true
+          borderWidth: 1
         }
       ]
     },

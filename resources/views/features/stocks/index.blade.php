@@ -73,6 +73,71 @@
             -webkit-overflow-scrolling: touch;
         }
     }
+    
+    /* DataTable Processing/Loading Indicator */
+    .dataTables_processing {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.9);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 15px;
+        font-size: 16px;
+        font-weight: 500;
+        color: #333;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .dataTables_processing .spinner-border {
+        width: 3rem;
+        height: 3rem;
+        border-width: 0.3em;
+    }
+    
+    .dataTables_wrapper {
+        position: relative;
+    }
+    
+    /* Loading overlay for table body */
+    #stocks-table tbody {
+        position: relative;
+    }
+    
+    .table-loading-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 15px;
+        z-index: 10;
+        border-radius: 4px;
+    }
+    
+    .table-loading-overlay .spinner-border {
+        width: 3rem;
+        height: 3rem;
+        border-width: 0.3em;
+    }
+    
+    .table-loading-overlay .loading-text {
+        font-size: 16px;
+        font-weight: 500;
+        color: #333;
+    }
 </style>
 @endpush
 
@@ -193,8 +258,32 @@
 @endif
 <script src="{{ asset('assets/libs/datatables.net/js/jquery.dataTables.min.js') }}"></script>
 <script src="{{ asset('assets/libs/datatables.net-bs5/js/dataTables.bootstrap5.min.js') }}"></script>
+<!-- Ensure Select2 is loaded before this script -->
 <script>
-$(document).ready(function() {
+// Wait for Select2 to be available
+(function() {
+    var checkSelect2 = function(attempts) {
+        attempts = attempts || 0;
+        if (typeof $.fn.select2 !== 'undefined') {
+            initStocksPage();
+        } else if (attempts < 20) {
+            setTimeout(function() {
+                checkSelect2(attempts + 1);
+            }, 100);
+        } else {
+            // Try to load Select2 manually as fallback
+            var script = document.createElement('script');
+            script.src = "{{ asset('assets/libs/select2/dist/js/select2.min.js') }}";
+            script.onload = function() {
+                initStocksPage();
+            };
+            document.head.appendChild(script);
+        }
+    };
+    
+    function initStocksPage() {
+        $(document).ready(function() {
+    
     // Initialize DataTable
     let stocksTable = $('#stocks-table').DataTable({
         processing: true,
@@ -204,6 +293,11 @@ $(document).ready(function() {
             data: function(d) {
                 d.item_id = $('#filter-item').val();
                 d.location_id = $('#filter-location').val();
+            },
+            dataSrc: function(json) {
+                // Remove loading overlay when data is loaded
+                $('#stocks-table tbody').find('.table-loading-overlay').remove();
+                return json.data;
             }
         },
         columns: [
@@ -227,7 +321,7 @@ $(document).ready(function() {
         autoWidth: false,
         order: [[0, 'desc']],
         language: {
-            processing: '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>',
+            processing: '<div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem; border-width: 0.3em;"></div><div class="mt-3" style="font-size: 16px; font-weight: 500;">Memuat data...</div>',
             lengthMenu: "Tampilkan _MENU_ entri",
             zeroRecords: "Tidak ada data yang ditemukan",
             info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ entri",
@@ -239,7 +333,34 @@ $(document).ready(function() {
                 last: "Terakhir",
                 next: "Selanjutnya",
                 previous: "Sebelumnya"
+            },
+            loadingRecords: "Memuat data...",
+            emptyTable: "Tidak ada data yang tersedia"
+        }
+    });
+    
+    // Add loading overlay to table body when loading starts
+    stocksTable.on('processing.dt', function(e, settings, processing) {
+        if (processing) {
+            // Add loading overlay to tbody
+            const tbody = $('#stocks-table tbody');
+            if (tbody.find('.table-loading-overlay').length === 0) {
+                tbody.append(`
+                    <tr class="table-loading-overlay-row">
+                        <td colspan="12" style="position: relative; height: 300px; padding: 0;">
+                            <div class="table-loading-overlay">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <div class="loading-text">Memuat data stok...</div>
+                            </div>
+                        </td>
+                    </tr>
+                `);
             }
+        } else {
+            // Remove loading overlay when done
+            $('#stocks-table tbody').find('.table-loading-overlay-row').remove();
         }
     });
 
@@ -254,17 +375,150 @@ $(document).ready(function() {
         stocksTable.ajax.reload();
     });
 
+    // Function to initialize Select2 for location selects
+    function initLocationSelect2() {
+        if (typeof $.fn.select2 === 'undefined') {
+            return false;
+        }
+        
+        const select2Config = {
+            placeholder: 'Pilih Lokasi',
+            allowClear: true,
+            dropdownParent: $('#stockModal'),
+            width: '100%',
+            language: {
+                noResults: function() {
+                    return "Tidak ada hasil";
+                },
+                searching: function() {
+                    return "Mencari...";
+                }
+            }
+        };
+        
+        let initialized = false;
+        
+        // Initialize Select2 for location_id in stock form
+        if ($('#location_id').length && $('#location_id').is(':visible')) {
+            if ($('#location_id').hasClass('select2-hidden-accessible')) {
+                $('#location_id').select2('destroy');
+            }
+            $('#location_id').select2(select2Config);
+            initialized = true;
+        }
+        
+        // Initialize for decrease_location_id
+        if ($('#decrease_location_id').length && $('#decrease_location_id').is(':visible')) {
+            if ($('#decrease_location_id').hasClass('select2-hidden-accessible')) {
+                $('#decrease_location_id').select2('destroy');
+            }
+            $('#decrease_location_id').select2(select2Config);
+            initialized = true;
+        }
+        
+        // Initialize for transfer location selects
+        if ($('#transfer_from_location_id').length && $('#transfer_from_location_id').is(':visible')) {
+            if ($('#transfer_from_location_id').hasClass('select2-hidden-accessible')) {
+                $('#transfer_from_location_id').select2('destroy');
+            }
+            $('#transfer_from_location_id').select2(select2Config);
+            initialized = true;
+        }
+        
+        if ($('#transfer_to_location_id').length && $('#transfer_to_location_id').is(':visible')) {
+            if ($('#transfer_to_location_id').hasClass('select2-hidden-accessible')) {
+                $('#transfer_to_location_id').select2('destroy');
+            }
+            $('#transfer_to_location_id').select2(select2Config);
+            initialized = true;
+        }
+        
+        // Also try to initialize any other location selects that might exist
+        $('select[id*="location_id"]').each(function() {
+            if (!$(this).hasClass('select2-hidden-accessible') && $(this).is(':visible')) {
+                const $select = $(this);
+                        $select.select2(select2Config);
+                        initialized = true;
+            }
+        });
+        
+        return initialized;
+    }
+
     // Load create form
     $('#btn-create-stock').on('click', function() {
-        Modal.load('stockModal', "{{ route('stocks.create') }}", 'Tambah Stok');
+        const promise = Modal.load('stockModal', "{{ route('stocks.create') }}", 'Tambah Stok');
         $('#btn-submit-form').show();
+        
+        // Initialize Select2 after content is loaded
+        const initSelect2AfterLoad = function() {
+            const initSelect2WithRetry = function(attempts = 0) {
+                if (attempts > 10) return; // Max 10 attempts
+                
+                if (initLocationSelect2()) {
+                    // Select2 initialized
+                } else if ($('#location_id').length && $('#location_id').is(':visible')) {
+                    // Retry if element exists but not initialized
+                    setTimeout(function() {
+                        initSelect2WithRetry(attempts + 1);
+                    }, 200);
+                }
+            };
+            
+            // Try after content is loaded
+            setTimeout(function() {
+                initSelect2WithRetry();
+            }, 300);
+        };
+        
+        // Use promise if available, otherwise use event
+        if (promise && promise.then) {
+            promise.then(initSelect2AfterLoad);
+        } else {
+            $('#stockModal').one('modal:content-loaded', initSelect2AfterLoad);
+        }
+        
+        // Also try after modal is shown (fallback)
+        $('#stockModal').one('shown.bs.modal', function() {
+            setTimeout(function() {
+                initLocationSelect2();
+            }, 500);
+        });
     });
 
     // Load increase stock form
     $(document).on('click', '#btn-increase-stock', function(e) {
         e.preventDefault();
-        Modal.load('stockModal', "{{ route('stocks.create') }}", 'Tambah Stok');
+        const promise = Modal.load('stockModal', "{{ route('stocks.create') }}", 'Tambah Stok');
         $('#btn-submit-form').show();
+        
+        const initSelect2AfterLoad = function() {
+            const initSelect2WithRetry = function(attempts = 0) {
+                if (attempts > 10) return;
+                if (initLocationSelect2()) {
+                    // Select2 initialized
+                } else if ($('#location_id').length && $('#location_id').is(':visible')) {
+                    setTimeout(function() {
+                        initSelect2WithRetry(attempts + 1);
+                    }, 200);
+                }
+            };
+            setTimeout(function() {
+                initSelect2WithRetry();
+            }, 300);
+        };
+        
+        if (promise && promise.then) {
+            promise.then(initSelect2AfterLoad);
+        } else {
+            $('#stockModal').one('modal:content-loaded', initSelect2AfterLoad);
+        }
+        
+        $('#stockModal').one('shown.bs.modal', function() {
+            setTimeout(function() {
+                initLocationSelect2();
+            }, 500);
+        });
     });
 
     // Load decrease stock form
@@ -305,6 +559,13 @@ $(document).ready(function() {
         // Show modal using Bootstrap modal
         const modal = new bootstrap.Modal(document.getElementById('stockModal'));
         modal.show();
+        
+        // Initialize Select2 after modal is shown
+        $('#stockModal').one('shown.bs.modal', function() {
+            setTimeout(function() {
+                initLocationSelect2();
+            }, 300);
+        });
     });
 
     // Load transfer stock form
@@ -354,6 +615,23 @@ $(document).ready(function() {
         // Show modal using Bootstrap modal
         const modal = new bootstrap.Modal(document.getElementById('stockModal'));
         modal.show();
+        
+        // Initialize Select2 after modal is shown with retry
+        $('#stockModal').one('shown.bs.modal', function() {
+            const initSelect2WithRetry = function(attempts = 0) {
+                if (attempts > 5) return;
+                if (initLocationSelect2()) {
+                    // Select2 initialized
+                } else if ($('#transfer_from_location_id').length || $('#transfer_to_location_id').length) {
+                    setTimeout(function() {
+                        initSelect2WithRetry(attempts + 1);
+                    }, 200);
+                }
+            };
+            setTimeout(function() {
+                initSelect2WithRetry();
+            }, 400);
+        });
     });
 
     // Handle form submission (use delegated event to work with dynamically created forms)
@@ -446,8 +724,36 @@ $(document).ready(function() {
     $(document).on('click', '.btn-edit-stock', function(e) {
         e.preventDefault();
         const stockId = $(this).data('stock-id');
-        Modal.load('stockModal', `/stocks/${stockId}/edit`, 'Edit Stok');
+        const promise = Modal.load('stockModal', `/stocks/${stockId}/edit`, 'Edit Stok');
         $('#btn-submit-form').show();
+        
+        const initSelect2AfterLoad = function() {
+            const initSelect2WithRetry = function(attempts = 0) {
+                if (attempts > 10) return;
+                if (initLocationSelect2()) {
+                    // Select2 initialized
+                } else if ($('#location_id').length && $('#location_id').is(':visible')) {
+                    setTimeout(function() {
+                        initSelect2WithRetry(attempts + 1);
+                    }, 200);
+                }
+            };
+            setTimeout(function() {
+                initSelect2WithRetry();
+            }, 300);
+        };
+        
+        if (promise && promise.then) {
+            promise.then(initSelect2AfterLoad);
+        } else {
+            $('#stockModal').one('modal:content-loaded', initSelect2AfterLoad);
+        }
+        
+        $('#stockModal').one('shown.bs.modal', function() {
+            setTimeout(function() {
+                initLocationSelect2();
+            }, 500);
+        });
     });
 
     $(document).on('click', '.btn-delete-stock', function(e) {
@@ -482,10 +788,53 @@ $(document).ready(function() {
 
     // Reset form when modal is hidden
     $('#stockModal').on('hidden.bs.modal', function() {
+        // Destroy Select2 instances before clearing
+        if (typeof $.fn.select2 !== 'undefined') {
+            $('#location_id, #decrease_location_id, #transfer_from_location_id, #transfer_to_location_id').each(function() {
+                if ($(this).hasClass('select2-hidden-accessible')) {
+                    $(this).select2('destroy');
+                }
+            });
+        }
         Modal.clear('stockModal');
         $('#btn-submit-form').show();
     });
-});
+    
+    // Initialize Select2 when modal is shown (for any form that might be loaded)
+    // This is a fallback to ensure Select2 is initialized even if other handlers fail
+    $('#stockModal').on('shown.bs.modal', function() {
+        // Multiple attempts to ensure Select2 is initialized
+        let attempts = 0;
+        const maxAttempts = 10;
+        
+        const tryInit = function() {
+            attempts++;
+            const initialized = initLocationSelect2();
+            
+            if (!initialized && attempts < maxAttempts) {
+                // Check if location selects exist but not initialized
+                const hasLocationSelects = $('#location_id, #decrease_location_id, #transfer_from_location_id, #transfer_to_location_id').filter(':visible').length > 0;
+                
+                if (hasLocationSelects) {
+                    setTimeout(tryInit, 200);
+                }
+            }
+        };
+        
+        setTimeout(tryInit, 300);
+    });
+    }); // end $(document).ready
+    } // end initStocksPage
+    
+    // Start checking for Select2
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            checkSelect2();
+        });
+    } else {
+        checkSelect2();
+    }
+})(); // end IIFE
 </script>
 @endpush
 @endsection

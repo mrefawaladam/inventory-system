@@ -103,7 +103,16 @@ class LocationController extends Controller
     public function store(Request $request)
     {
         try {
-            $validated = $request->validate(LocationService::getCreateRules());
+            // Get base rules
+            $rules = LocationService::getCreateRules();
+            
+            // Make parent_id required for RACK and SLOT
+            $type = $request->input('type');
+            if ($type === \App\Enums\LocationType::RACK->value || $type === \App\Enums\LocationType::SLOT->value) {
+                $rules['parent_id'] = 'required|exists:locations,id';
+            }
+            
+            $validated = $request->validate($rules);
 
             $this->locationService->create($validated);
 
@@ -148,6 +157,18 @@ class LocationController extends Controller
     public function show(Location $location)
     {
         if (request()->ajax()) {
+            if (request()->wantsJson()) {
+                // Return JSON for API requests
+                return response()->json([
+                    'location' => [
+                        'id' => $location->id,
+                        'code' => $location->code,
+                        'type' => $location->type->value,
+                        'parent_id' => $location->parent_id,
+                        'warehouse_id' => $location->warehouse_id,
+                    ]
+                ]);
+            }
             return response()->json([
                 'html' => view('features.locations.partials.show', compact('location'))->render()
             ]);
@@ -254,25 +275,38 @@ class LocationController extends Controller
      */
     public function getByWarehouse(Request $request)
     {
-        $warehouseId = $request->get('warehouse_id');
-        $type = $request->get('type');
-        $parentId = $request->get('parent_id');
+        try {
+            $warehouseId = $request->get('warehouse_id');
+            $type = $request->get('type');
+            $parentId = $request->get('parent_id');
 
-        $query = Location::where('warehouse_id', $warehouseId);
+            if (!$warehouseId) {
+                return response()->json([]);
+            }
 
-        if ($type) {
-            $query->where('type', $type);
+            $query = Location::where('warehouse_id', $warehouseId);
+
+            if ($type) {
+                $query->where('type', $type);
+            }
+
+            // Filter by parent_id
+            if ($parentId) {
+                $query->where('parent_id', $parentId);
+            } else {
+                // If no parent_id provided, get root locations (parent_id is null)
+                $query->whereNull('parent_id');
+            }
+
+            $locations = $query->orderBy('code')->get();
+
+            return response()->json($locations);
+        } catch (\Exception $e) {
+            \Log::error('Error in getByWarehouse: ' . $e->getMessage());
+            return response()->json([
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        if ($parentId) {
-            $query->where('parent_id', $parentId);
-        } else {
-            $query->whereNull('parent_id');
-        }
-
-        $locations = $query->get();
-
-        return response()->json($locations);
     }
 }
 

@@ -39,6 +39,32 @@
         color: #0c5460;
         border: 1px solid #bee5eb;
     }
+    .item-search-result {
+        padding: 12px;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        margin-bottom: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .item-search-result:hover {
+        background-color: #f8f9fa;
+        border-color: #0d6efd;
+    }
+    .item-search-result.selected {
+        background-color: #e7f3ff;
+        border-color: #0d6efd;
+    }
+    .item-search-result .item-name {
+        font-weight: 600;
+        color: #212529;
+        margin-bottom: 4px;
+    }
+    .item-search-result .item-details {
+        font-size: 0.875rem;
+        color: #6c757d;
+        margin-bottom: 4px;
+    }
 </style>
 @endpush
 
@@ -172,6 +198,69 @@
         </div>
     </div>
 </div>
+
+<!-- Modal for Manual Item Input -->
+<x-ui.modal
+    id="itemSearchModal"
+    title="Cari Item"
+    size="lg"
+>
+    <div class="mb-3">
+        <label for="item-search-input" class="form-label">Cari berdasarkan Nama, SKU, atau Barcode</label>
+        <input type="text" class="form-control" id="item-search-input" placeholder="Ketik untuk mencari item..." autocomplete="off">
+        <small class="text-muted">Minimal 2 karakter</small>
+    </div>
+    <div id="item-search-results" style="max-height: 400px; overflow-y: auto;">
+        <div class="text-center text-muted py-4">
+            <i class="ti ti-search"></i> Mulai ketik untuk mencari item
+        </div>
+    </div>
+    <x-slot name="footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+    </x-slot>
+</x-ui.modal>
+
+<!-- Modal for Manual Location Input (From) -->
+<x-ui.modal
+    id="fromLocationSearchModal"
+    title="Cari Lokasi Asal"
+    size="lg"
+>
+    <div class="mb-3">
+        <label for="from-location-search-input" class="form-label">Cari berdasarkan Kode Lokasi, Path, atau Nama Sekolah</label>
+        <input type="text" class="form-control" id="from-location-search-input" placeholder="Ketik untuk mencari lokasi..." autocomplete="off">
+        <small class="text-muted">Minimal 2 karakter</small>
+    </div>
+    <div id="from-location-search-results" style="max-height: 400px; overflow-y: auto;">
+        <div class="text-center text-muted py-4">
+            <i class="ti ti-search"></i> Mulai ketik untuk mencari lokasi
+        </div>
+    </div>
+    <x-slot name="footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+    </x-slot>
+</x-ui.modal>
+
+<!-- Modal for Manual Location Input (To) -->
+<x-ui.modal
+    id="toLocationSearchModal"
+    title="Cari Sekolah Tujuan"
+    size="lg"
+>
+    <div class="mb-3">
+        <label for="to-location-search-input" class="form-label">Cari berdasarkan Kode Lokasi, Path, atau Nama Sekolah</label>
+        <input type="text" class="form-control" id="to-location-search-input" placeholder="Ketik untuk mencari lokasi..." autocomplete="off">
+        <small class="text-muted">Minimal 2 karakter</small>
+    </div>
+    <div id="to-location-search-results" style="max-height: 400px; overflow-y: auto;">
+        <div class="text-center text-muted py-4">
+            <i class="ti ti-search"></i> Mulai ketik untuk mencari lokasi
+        </div>
+    </div>
+    <x-slot name="footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+    </x-slot>
+</x-ui.modal>
 @endsection
 
 @push('scripts')
@@ -182,8 +271,31 @@
 <script src="https://unpkg.com/html5-qrcode"></script>
 <script src="{{ asset('assets/js/helpers/toast.js') }}"></script>
 <script src="{{ asset('assets/js/helpers/form.js') }}"></script>
+<script src="{{ asset('assets/js/helpers/modal.js') }}"></script>
 <script>
-$(document).ready(function() {
+// Wait for Select2 to be available
+(function() {
+    var checkSelect2 = function(attempts) {
+        attempts = attempts || 0;
+        if (typeof $.fn.select2 !== 'undefined') {
+            initTransferPage();
+        } else if (attempts < 20) {
+            setTimeout(function() {
+                checkSelect2(attempts + 1);
+            }, 100);
+        } else {
+            // Try to load Select2 manually as fallback
+            var script = document.createElement('script');
+            script.src = "{{ asset('assets/libs/select2/dist/js/select2.min.js') }}";
+            script.onload = function() {
+                initTransferPage();
+            };
+            document.head.appendChild(script);
+        }
+    };
+    
+    function initTransferPage() {
+        $(document).ready(function() {
     let itemScanner = null;
     let fromLocationScanner = null;
     let toLocationScanner = null;
@@ -247,10 +359,96 @@ $(document).ready(function() {
         }
     }
 
+    // Manual input - show modal
     $('#btn-manual-input').on('click', function() {
-        const barcode = prompt('Masukkan barcode item:');
-        if (barcode && barcode.trim()) {
-            processItemBarcode(barcode.trim());
+        // Reset search
+        $('#item-search-input').val('');
+        $('#item-search-results').html('<div class="text-center text-muted py-4"><i class="ti ti-search"></i> Mulai ketik untuk mencari item</div>');
+        // Show modal
+        Modal.show('itemSearchModal');
+        // Focus on input
+        setTimeout(function() {
+            $('#item-search-input').focus();
+        }, 300);
+    });
+
+    // Item search with debounce
+    let searchTimeout;
+    $('#item-search-input').on('input', function() {
+        const query = $(this).val().trim();
+        const resultsContainer = $('#item-search-results');
+
+        clearTimeout(searchTimeout);
+
+        if (query.length < 2) {
+            resultsContainer.html('<div class="text-center text-muted py-4"><i class="ti ti-search"></i> Minimal 2 karakter untuk mencari</div>');
+            return;
+        }
+
+        // Show loading
+        resultsContainer.html('<div class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>');
+
+        searchTimeout = setTimeout(function() {
+            $.ajax({
+                url: "{{ route('transfer.searchItems') }}",
+                method: 'GET',
+                data: {
+                    query: query
+                },
+                success: function(response) {
+                    if (response.success && response.items && response.items.length > 0) {
+                        let html = '';
+                        response.items.forEach(function(item) {
+                            html += `
+                                <div class="item-search-result" data-item-id="${item.id}" data-item-name="${item.name}" data-item-sku="${item.sku}" data-item-barcode="${item.barcode}">
+                                    <div class="item-name">${item.name}</div>
+                                    <div class="item-details">
+                                        SKU: ${item.sku} | Barcode: ${item.barcode}
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        resultsContainer.html(html);
+                    } else {
+                        resultsContainer.html('<div class="text-center text-muted py-4"><i class="ti ti-alert-circle"></i> Item tidak ditemukan</div>');
+                    }
+                },
+                error: function(xhr) {
+                    const message = xhr.responseJSON?.message || 'Terjadi kesalahan saat mencari item';
+                    resultsContainer.html(`<div class="alert alert-danger">${message}</div>`);
+                }
+            });
+        }, 300);
+    });
+
+    // Handle item selection
+    $(document).on('click', '.item-search-result', function() {
+        const itemId = $(this).data('item-id');
+        const itemName = $(this).data('item-name');
+        const itemSku = $(this).data('item-sku');
+        const itemBarcode = $(this).data('item-barcode');
+
+        // Set form values
+        $('#item_id').val(itemId);
+        $('#item-name').text(itemName);
+        $('#item-sku').text(itemSku);
+        $('#item-barcode').text(itemBarcode);
+        $('#item-info').show();
+        $('#btn-start-from-scanner, #btn-manual-from-input').prop('disabled', false);
+
+        // Close modal
+        Modal.hide('itemSearchModal');
+        Toast.success('Item berhasil dipilih!');
+    });
+
+    // Handle Enter key in search input
+    $('#item-search-input').on('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const firstResult = $('.item-search-result').first();
+            if (firstResult.length) {
+                firstResult.click();
+            }
         }
     });
 
@@ -313,11 +511,92 @@ $(document).ready(function() {
         }
     }
 
+    // Manual input - show modal for from location
     $('#btn-manual-from-input').on('click', function() {
-        const code = prompt('Masukkan kode lokasi asal:');
-        if (code && code.trim()) {
-            processLocationBarcode(code.trim(), 'from');
+        // Reset search
+        $('#from-location-search-input').val('');
+        $('#from-location-search-results').html('<div class="text-center text-muted py-4"><i class="ti ti-search"></i> Mulai ketik untuk mencari lokasi</div>');
+        // Show modal
+        Modal.show('fromLocationSearchModal');
+        // Focus on input
+        setTimeout(function() {
+            $('#from-location-search-input').focus();
+        }, 300);
+    });
+
+    // From location search with debounce
+    let fromLocationSearchTimeout;
+    $('#from-location-search-input').on('input', function() {
+        const query = $(this).val().trim();
+        const resultsContainer = $('#from-location-search-results');
+
+        clearTimeout(fromLocationSearchTimeout);
+
+        if (query.length < 2) {
+            resultsContainer.html('<div class="text-center text-muted py-4"><i class="ti ti-search"></i> Minimal 2 karakter untuk mencari</div>');
+            return;
         }
+
+        // Show loading
+        resultsContainer.html('<div class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>');
+
+        fromLocationSearchTimeout = setTimeout(function() {
+            $.ajax({
+                url: "{{ route('transfer.searchLocations') }}",
+                method: 'GET',
+                data: {
+                    query: query
+                },
+                success: function(response) {
+                    if (response.success && response.locations && response.locations.length > 0) {
+                        let html = '';
+                        response.locations.forEach(function(location) {
+                            html += `
+                                <div class="location-search-result p-3 border-bottom" 
+                                     data-location-id="${location.id}" 
+                                     data-location-code="${location.code}" 
+                                     data-location-path="${location.path}"
+                                     data-location-warehouse="${location.warehouse_name}"
+                                     style="cursor: pointer; transition: background-color 0.2s;"
+                                     onmouseover="this.style.backgroundColor='#f8f9fa'"
+                                     onmouseout="this.style.backgroundColor=''">
+                                    <div class="fw-bold">${location.full_path}</div>
+                                    <small class="text-muted">Kode: ${location.code}</small>
+                                </div>
+                            `;
+                        });
+                        resultsContainer.html(html);
+                    } else {
+                        resultsContainer.html('<div class="text-center text-muted py-4"><i class="ti ti-alert-circle"></i> Lokasi tidak ditemukan</div>');
+                    }
+                },
+                error: function(xhr) {
+                    const message = xhr.responseJSON?.message || 'Terjadi kesalahan saat mencari lokasi';
+                    resultsContainer.html(`<div class="alert alert-danger">${message}</div>`);
+                }
+            });
+        }, 300);
+    });
+
+    // Handle from location selection
+    $(document).on('click', '#fromLocationSearchModal .location-search-result', function() {
+        const locationId = $(this).data('location-id');
+        const locationCode = $(this).data('location-code');
+        const locationPath = $(this).data('location-path');
+        const warehouseName = $(this).data('location-warehouse');
+        
+        // Set location
+        $('#from_location_id').val(locationId);
+        $('#from-location-path').text(warehouseName + ' - ' + locationPath);
+        $('#from-location-info').show();
+        
+        // Hide modal
+        Modal.hide('fromLocationSearchModal');
+        
+        // Enable to location scanner
+        $('#btn-start-to-scanner, #btn-manual-to-input').prop('disabled', false);
+        
+        Toast.success('Lokasi asal berhasil dipilih!');
     });
 
     // To Location Scanner
@@ -357,10 +636,100 @@ $(document).ready(function() {
         }
     }
 
+    // Manual input - show modal for to location
     $('#btn-manual-to-input').on('click', function() {
-        const code = prompt('Masukkan kode lokasi tujuan:');
-        if (code && code.trim()) {
-            processLocationBarcode(code.trim(), 'to');
+        // Reset search
+        $('#to-location-search-input').val('');
+        $('#to-location-search-results').html('<div class="text-center text-muted py-4"><i class="ti ti-search"></i> Mulai ketik untuk mencari lokasi</div>');
+        // Show modal
+        Modal.show('toLocationSearchModal');
+        // Focus on input
+        setTimeout(function() {
+            $('#to-location-search-input').focus();
+        }, 300);
+    });
+
+    // To location search with debounce
+    let toLocationSearchTimeout;
+    $('#to-location-search-input').on('input', function() {
+        const query = $(this).val().trim();
+        const resultsContainer = $('#to-location-search-results');
+
+        clearTimeout(toLocationSearchTimeout);
+
+        if (query.length < 2) {
+            resultsContainer.html('<div class="text-center text-muted py-4"><i class="ti ti-search"></i> Minimal 2 karakter untuk mencari</div>');
+            return;
+        }
+
+        // Show loading
+        resultsContainer.html('<div class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>');
+
+        toLocationSearchTimeout = setTimeout(function() {
+            $.ajax({
+                url: "{{ route('transfer.searchLocations') }}",
+                method: 'GET',
+                data: {
+                    query: query
+                },
+                success: function(response) {
+                    if (response.success && response.locations && response.locations.length > 0) {
+                        let html = '';
+                        response.locations.forEach(function(location) {
+                            html += `
+                                <div class="location-search-result p-3 border-bottom cursor-pointer" 
+                                     data-location-id="${location.id}" 
+                                     data-location-code="${location.code}" 
+                                     data-location-path="${location.path}"
+                                     data-location-warehouse="${location.warehouse_name}"
+                                     style="cursor: pointer; transition: background-color 0.2s;"
+                                     onmouseover="this.style.backgroundColor='#f8f9fa'"
+                                     onmouseout="this.style.backgroundColor=''">
+                                    <div class="fw-bold">${location.full_path}</div>
+                                    <small class="text-muted">Kode: ${location.code}</small>
+                                </div>
+                            `;
+                        });
+                        resultsContainer.html(html);
+                    } else {
+                        resultsContainer.html('<div class="text-center text-muted py-4"><i class="ti ti-alert-circle"></i> Lokasi tidak ditemukan</div>');
+                    }
+                },
+                error: function(xhr) {
+                    const message = xhr.responseJSON?.message || 'Terjadi kesalahan saat mencari lokasi';
+                    resultsContainer.html(`<div class="alert alert-danger">${message}</div>`);
+                }
+            });
+        }, 300);
+    });
+
+    // Handle to location selection
+    $(document).on('click', '#toLocationSearchModal .location-search-result', function() {
+        const locationId = $(this).data('location-id');
+        const locationCode = $(this).data('location-code');
+        const locationPath = $(this).data('location-path');
+        const warehouseName = $(this).data('location-warehouse');
+        
+        // Set location
+        $('#to_location_id').val(locationId);
+        $('#to-location-path').text(warehouseName + ' - ' + locationPath);
+        $('#to-location-info').show();
+        
+        // Hide modal
+        Modal.hide('toLocationSearchModal');
+        
+        Toast.success('Sekolah tujuan berhasil dipilih!');
+    });
+
+    // Handle Enter key in location search inputs
+    $('#from-location-search-input, #to-location-search-input').on('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const modalId = $(this).closest('.modal').attr('id');
+            const firstResult = $(`#${modalId} .location-search-result`).first();
+            if (firstResult.length) {
+                firstResult.click();
+            }
         }
     });
 
@@ -433,7 +802,18 @@ $(document).ready(function() {
         stopFromLocationScanner();
         stopToLocationScanner();
     });
-});
+    }); // end $(document).ready
+    } // end initTransferPage
+    
+    // Start checking for Select2
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            checkSelect2();
+        });
+    } else {
+        checkSelect2();
+    }
+})();
 </script>
 @endpush
 

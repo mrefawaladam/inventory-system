@@ -9,6 +9,70 @@
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
     }
+    
+    /* DataTable Processing/Loading Indicator */
+    .dataTables_processing {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.9);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 15px;
+        font-size: 16px;
+        font-weight: 500;
+        color: #333;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .dataTables_processing .spinner-border {
+        width: 3rem;
+        height: 3rem;
+        border-width: 0.3em;
+    }
+    
+    .dataTables_wrapper {
+        position: relative;
+    }
+    
+    #inbound-table tbody {
+        position: relative;
+    }
+    
+    .table-loading-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 15px;
+        z-index: 10;
+        border-radius: 4px;
+    }
+    
+    .table-loading-overlay .spinner-border {
+        width: 3rem;
+        height: 3rem;
+        border-width: 0.3em;
+    }
+    
+    .table-loading-overlay .loading-text {
+        font-size: 16px;
+        font-weight: 500;
+        color: #333;
+    }
 </style>
 @endpush
 
@@ -38,6 +102,7 @@
                             <th>Kode Transaksi</th>
                             <th>Item</th>
                             <th>SKU</th>
+                            <th>Supplier</th>
                             <th>Lokasi Tujuan</th>
                             <th>Jumlah</th>
                             <th>Batch</th>
@@ -66,27 +131,56 @@ $(document).ready(function() {
         $('#inbound-table').DataTable().destroy();
     }
 
-    $('#inbound-table').DataTable({
+    const inboundTable = $('#inbound-table').DataTable({
         processing: true,
         serverSide: true,
         ajax: {
             url: "{{ route('inbound.index') }}",
-            type: 'GET'
+            type: 'GET',
+            dataSrc: function(json) {
+                $('#inbound-table tbody').find('.table-loading-overlay').remove();
+                return json.data;
+            }
         },
         columns: [
             { data: 'transaction_code', name: 'transaction_code' },
             { data: 'item_name', name: 'item_name', orderable: false },
             { data: 'item_sku', name: 'item_sku', orderable: false },
+            { data: 'supplier_name', name: 'supplier_name', orderable: false },
             { data: 'location_name', name: 'location_name', orderable: false },
             { data: 'quantity', name: 'quantity' },
             { data: 'batch', name: 'batch' },
             { data: 'user_name', name: 'user_name', orderable: false },
             { data: 'created_at', name: 'created_at' },
         ],
-        order: [[7, 'desc']],
+        order: [[8, 'desc']],
         scrollX: true,
         language: {
+            processing: '<div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem; border-width: 0.3em;"></div><div class="mt-3" style="font-size: 16px; font-weight: 500;">Memuat data...</div>',
             url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/id.json'
+        }
+    });
+    
+    // Add loading overlay to table body when loading starts
+    inboundTable.on('processing.dt', function(e, settings, processing) {
+        if (processing) {
+            const tbody = $('#inbound-table tbody');
+            if (tbody.find('.table-loading-overlay').length === 0) {
+                tbody.append(`
+                    <tr class="table-loading-overlay-row">
+                        <td colspan="9" style="position: relative; height: 300px; padding: 0;">
+                            <div class="table-loading-overlay">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <div class="loading-text">Memuat data transaksi inbound...</div>
+                            </div>
+                        </td>
+                    </tr>
+                `);
+            }
+        } else {
+            $('#inbound-table tbody').find('.table-loading-overlay-row').remove();
         }
     });
 });
