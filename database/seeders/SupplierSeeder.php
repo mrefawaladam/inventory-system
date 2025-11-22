@@ -17,7 +17,6 @@ class SupplierSeeder extends Seeder
         $suppliers = [
             ['name' => 'PT. Supplier Sarana Sekolah Indonesia', 'phone' => '081234567890', 'address' => 'Jl. Raya Industri No. 123, Jakarta'],
             ['name' => 'CV. Distributor Alat Pendidikan', 'phone' => '081234567891', 'address' => 'Jl. Gatot Subroto No. 456, Bandung'],
-            ['name' => 'PT. Pemasok Peralatan Sekolah', 'phone' => '081234567892', 'address' => 'Jl. Sudirman No. 789, Surabaya'],
             ['name' => 'Kemensos - Kementerian Sosial', 'phone' => '081234567893', 'address' => 'Jl. Salemba Raya No. 28, Jakarta Pusat'],
         ];
 
@@ -31,25 +30,6 @@ class SupplierSeeder extends Seeder
             ]);
         }
 
-        // Generate additional suppliers untuk sarana sekolah
-        $additionalSuppliers = [
-            'PT. Produsen Perabot Sekolah',
-            'CV. Distributor Sarana Pendidikan',
-            'PT. Pemasok Alat Tulis Sekolah',
-            'CV. Supplier Peralatan Kelas',
-            'PT. Distributor Furniture Sekolah',
-        ];
-
-        foreach ($additionalSuppliers as $supplierName) {
-            DB::table('suppliers')->insert([
-                'name' => $supplierName,
-                'phone' => fake()->phoneNumber(),
-                'address' => fake()->address(),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
-
-        $this->command->info('Suppliers untuk sarana sekolah seeded successfully!');
+        $this->command->info('✓ Data supplier berhasil dimuat');
     }
 }

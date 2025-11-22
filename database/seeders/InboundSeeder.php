@@ -23,10 +23,10 @@ class InboundSeeder extends Seeder
             return;
         }
 
-        // Generate inbound records dengan data yang jelas untuk demo
-        $statuses = [InboundStatus::PENDING->value, InboundStatus::COMPLETED->value, InboundStatus::COMPLETED->value]; // Lebih banyak completed untuk demo
+        // Generate inbound records
+        $statuses = [InboundStatus::PENDING->value, InboundStatus::COMPLETED->value, InboundStatus::COMPLETED->value];
         
-        for ($i = 0; $i < 10; $i++) {
+        for ($i = 0; $i < 4; $i++) {
             $supplier = $suppliers->random();
             $user = $users->random();
             $status = fake()->randomElement($statuses);
@@ -47,6 +47,6 @@ class InboundSeeder extends Seeder
             ]);
         }
 
-        $this->command->info('Inbound sarana sekolah seeded successfully!');
+        $this->command->info('✓ Data inbound berhasil dimuat');
     }
 }

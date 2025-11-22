@@ -50,36 +50,33 @@ class StockSeeder extends Seeder
                 $availableSlots = $slots;
             }
 
-            // Assign stock ke 1-2 slot per item untuk demo yang jelas
-            $numSlots = min(2, $availableSlots->count());
-            $selectedSlots = $availableSlots->random($numSlots);
+            // Assign stock ke 1 slot per item (lebih sederhana)
+            $selectedSlot = $availableSlots->random();
 
-            foreach ($selectedSlots as $slot) {
-                // Quantity yang realistis untuk sarana sekolah
-                $quantity = fake()->numberBetween(10, 50);
-                
-                // Batch dengan format yang jelas: SR-YYYYMMDD-XXX
-                $batchDate = fake()->dateTimeBetween('-6 months', 'now')->format('Ymd');
-                $batch = 'SR-' . $batchDate . '-' . strtoupper(fake()->lexify('???'));
+            // Quantity yang realistis
+            $quantity = fake()->numberBetween(20, 40);
+            
+            // Batch dengan format jelas: SR-YYYYMMDD-XXX
+            $batchDate = fake()->dateTimeBetween('-3 months', 'now')->format('Ymd');
+            $batch = 'SR-' . $batchDate . '-' . strtoupper(fake()->lexify('???'));
 
-                // Hanya beberapa item yang punya expired date (seperti makanan/peralatan tertentu)
-                $expiredAt = null;
-                if (in_array($item->name, ['Termos Nasi', 'Tempat Hidangan Lauk'])) {
-                    $expiredAt = fake()->optional(0.5)->dateTimeBetween('+6 months', '+2 years');
-                }
-
-                DB::table('stocks')->insert([
-                    'item_id' => $item->id,
-                    'location_id' => $slot->id,
-                    'quantity' => $quantity,
-                    'batch' => $batch,
-                    'expired_at' => $expiredAt ? $expiredAt->format('Y-m-d') : null,
-                    'created_at' => fake()->dateTimeBetween('-6 months', 'now'),
-                    'updated_at' => now(),
-                ]);
+            // Hanya beberapa item yang punya expired date
+            $expiredAt = null;
+            if (in_array($item->name, ['Termos Nasi', 'Tempat Hidangan Lauk'])) {
+                $expiredAt = fake()->optional(0.5)->dateTimeBetween('+6 months', '+2 years');
             }
+
+            DB::table('stocks')->insert([
+                'item_id' => $item->id,
+                'location_id' => $selectedSlot->id,
+                'quantity' => $quantity,
+                'batch' => $batch,
+                'expired_at' => $expiredAt ? $expiredAt->format('Y-m-d') : null,
+                'created_at' => fake()->dateTimeBetween('-3 months', 'now'),
+                'updated_at' => now(),
+            ]);
         }
 
-        $this->command->info('Stock sarana sekolah seeded successfully!');
+        $this->command->info('✓ Data stok berhasil dimuat');
     }
 }

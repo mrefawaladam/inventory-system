@@ -38,10 +38,9 @@ class TransactionSeeder extends Seeder
             'Penerimaan sarana sekolah dari supplier',
             'Penerimaan barang baru untuk distribusi',
             'Stock masuk dari Kemensos',
-            'Penerimaan peralatan sekolah',
         ];
 
-        for ($i = 0; $i < 12; $i++) {
+        for ($i = 0; $i < 5; $i++) {
             $item = $items->random();
             $toLocation = $locations->random();
             $user = $users->random();
@@ -66,10 +65,9 @@ class TransactionSeeder extends Seeder
         $outboundNotes = [
             'Pengiriman sarana ke sekolah',
             'Distribusi peralatan sekolah',
-            'Pengiriman ke Sekolah Rakyat',
         ];
 
-        for ($i = 0; $i < 10; $i++) {
+        for ($i = 0; $i < 4; $i++) {
             $item = $items->random();
             $fromLocation = $locations->random();
             $user = $users->random();
@@ -94,10 +92,9 @@ class TransactionSeeder extends Seeder
         $transferNotes = [
             'Pemindahan stock ke zona lain',
             'Reorganisasi lokasi penyimpanan',
-            'Transfer untuk optimasi ruang',
         ];
 
-        for ($i = 0; $i < 5; $i++) {
+        for ($i = 0; $i < 2; $i++) {
             $item = $items->random();
             $fromLocation = $locations->random();
             $availableLocations = $locations->where('id', '!=', $fromLocation->id);
@@ -120,6 +117,6 @@ class TransactionSeeder extends Seeder
             ]);
         }
 
-        $this->command->info('Transaksi sarana sekolah seeded successfully!');
+        $this->command->info('✓ Data transaksi berhasil dimuat');
     }
 }

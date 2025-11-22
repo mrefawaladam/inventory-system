@@ -16,16 +16,14 @@ class LocationSeeder extends Seeder
     {
         $warehouses = DB::table('warehouses')->get();
 
-        $zoneNames = ['A', 'B', 'C'];
         $zoneDescriptions = [
             'A' => 'Zona Perabot Kelas (Meja, Kursi, Papan Tulis)',
             'B' => 'Zona Peralatan Dapur (Teko, Termos, Tempat Hidangan)',
-            'C' => 'Zona Dekorasi & Perlengkapan (Foto, Lambang, Jam Dinding)'
         ];
 
         foreach ($warehouses as $warehouse) {
-            // Create Zones (3 zones per warehouse dengan nama jelas)
-            foreach ($zoneNames as $zoneName) {
+            // Buat 2 zona per gudang (lebih sederhana)
+            foreach (['A', 'B'] as $zoneName) {
                 $zoneId = DB::table('locations')->insertGetId([
                     'warehouse_id' => $warehouse->id,
                     'parent_id' => null,
@@ -37,8 +35,8 @@ class LocationSeeder extends Seeder
                     'updated_at' => now(),
                 ]);
 
-                // Create Racks per Zone (3 racks per zone untuk demo yang mudah)
-                for ($r = 1; $r <= 3; $r++) {
+                // Buat 2 rak per zona
+                for ($r = 1; $r <= 2; $r++) {
                     $rackId = DB::table('locations')->insertGetId([
                         'warehouse_id' => $warehouse->id,
                         'parent_id' => $zoneId,
@@ -50,8 +48,8 @@ class LocationSeeder extends Seeder
                         'updated_at' => now(),
                     ]);
 
-                    // Create Slots per Rack (5 slots per rack untuk demo yang mudah)
-                    for ($s = 1; $s <= 5; $s++) {
+                    // Buat 3 slot per rak
+                    for ($s = 1; $s <= 3; $s++) {
                         DB::table('locations')->insert([
                             'warehouse_id' => $warehouse->id,
                             'parent_id' => $rackId,
@@ -67,6 +65,6 @@ class LocationSeeder extends Seeder
             }
         }
 
-        $this->command->info('Lokasi gudang sekolah seeded successfully!');
+        $this->command->info('✓ Data lokasi berhasil dimuat');
     }
 }

@@ -15,25 +15,18 @@ class WarehouseSeeder extends Seeder
     {
         $warehouses = [
             [
-                'name' => 'Sekolah Pusat Jakarta',
+                'name' => 'Gudang Pusat Jakarta',
                 'address' => 'Jl. Raya Bekasi Km 25, Cakung, Jakarta Timur',
                 'latitude' => -6.2088,
                 'longitude' => 106.8456,
-                'description' => 'Gudang pusat untuk distribusi sarana sekolah wilayah Jakarta dan sekitarnya',
+                'description' => 'Gudang pusat untuk distribusi sarana sekolah',
             ],
             [
-                'name' => 'Sekolah Bandung',
+                'name' => 'Gudang Bandung',
                 'address' => 'Jl. Soekarno Hatta No. 500, Bandung',
                 'latitude' => -6.9175,
                 'longitude' => 107.6191,
-                'description' => 'Gudang untuk distribusi sarana sekolah wilayah Jawa Barat',
-            ],
-            [
-                'name' => 'Sekolah Surabaya',
-                'address' => 'Jl. Raya Gresik Km 10, Surabaya',
-                'latitude' => -7.2575,
-                'longitude' => 112.7521,
-                'description' => 'Gudang untuk distribusi sarana sekolah wilayah Jawa Timur',
+                'description' => 'Gudang distribusi sarana sekolah wilayah Jawa Barat',
             ],
         ];
 
@@ -49,19 +42,6 @@ class WarehouseSeeder extends Seeder
             ]);
         }
 
-        // Generate additional random warehouses untuk sarana sekolah
-        for ($i = 0; $i < 2; $i++) {
-            DB::table('warehouses')->insert([
-                'name' => 'Sekolah ' . fake()->city(),
-                'address' => fake()->address(),
-                'latitude' => fake()->latitude(-6.5, -7.5),
-                'longitude' => fake()->longitude(106.0, 112.0),
-                'description' => 'Gudang untuk distribusi sarana sekolah',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
-
-        $this->command->info('Gudang sekolah seeded successfully!');
+        $this->command->info('✓ Data gudang berhasil dimuat');
     }
 }

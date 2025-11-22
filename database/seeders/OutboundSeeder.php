@@ -22,10 +22,10 @@ class OutboundSeeder extends Seeder
             return;
         }
 
-        // Generate outbound records dengan data yang jelas untuk demo
-        $statuses = [OutboundStatus::PENDING->value, OutboundStatus::COMPLETED->value, OutboundStatus::COMPLETED->value]; // Lebih banyak completed untuk demo
+        // Generate outbound records
+        $statuses = [OutboundStatus::PENDING->value, OutboundStatus::COMPLETED->value, OutboundStatus::COMPLETED->value];
         
-        for ($i = 0; $i < 8; $i++) {
+        for ($i = 0; $i < 3; $i++) {
             $customer = $customers->random();
             $user = $users->random();
             $status = fake()->randomElement($statuses);
@@ -46,6 +46,6 @@ class OutboundSeeder extends Seeder
             ]);
         }
 
-        $this->command->info('Outbound sarana sekolah seeded successfully!');
+        $this->command->info('✓ Data outbound berhasil dimuat');
     }
 }

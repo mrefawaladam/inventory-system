@@ -62,25 +62,31 @@ class DatabaseSeeder extends Seeder
             $testUser->assignRole('user');
         }
 
-        $this->command->info('Default users created successfully!');
-        $this->command->info('Admin: admin@example.com / password');
-        $this->command->info('Manager: manager@example.com / password');
-        $this->command->info('User: user@example.com / password');
+        $this->command->info('✓ Pengguna default berhasil dibuat');
+        $this->command->info('  Admin: admin@example.com / password');
+        $this->command->info('  Manager: manager@example.com / password');
+        $this->command->info('  User: user@example.com / password');
 
-        // Seed warehouse-related data
-        $this->command->info('Seeding warehouse data...');
+        // Seed data master (dalam urutan yang benar)
+        $this->command->info('Memuat data master...');
         $this->call([
             SupplierSeeder::class,
             CustomerSeeder::class,
             WarehouseSeeder::class,
-            LocationSeeder::class,
             ItemSeeder::class,
+            LocationSeeder::class,
             StockSeeder::class,
+        ]);
+
+        // Seed data transaksi
+        $this->command->info('Memuat data transaksi...');
+        $this->call([
             TransactionSeeder::class,
             InboundSeeder::class,
             OutboundSeeder::class,
         ]);
 
-        $this->command->info('All seeders completed successfully!');
+        $this->command->info('');
+        $this->command->info('✓ Semua data berhasil dimuat!');
     }
 }
