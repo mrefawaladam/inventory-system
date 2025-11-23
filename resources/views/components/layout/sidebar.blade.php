@@ -32,12 +32,14 @@
             <span class="hide-menu">Pages</span>
           </li>
 
+          @if(auth()->user()->hasRole('admin'))
           <li class="sidebar-item">
             <a class="sidebar-link" href="{{ route('users.index') }}">
               <iconify-icon icon="solar:users-group-two-rounded-line-duotone"></iconify-icon>
               <span class="hide-menu">Kelola Pengguna</span>
             </a>
           </li>
+          @endif
 
           <li class="sidebar-item">
             <a class="sidebar-link" href="{{ route('suppliers.index') }}">

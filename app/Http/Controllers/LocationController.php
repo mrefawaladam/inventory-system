@@ -6,6 +6,7 @@ use App\Models\Location;
 use App\Models\Warehouse;
 use App\Services\LocationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
 
 class LocationController extends Controller
@@ -23,29 +24,53 @@ class LocationController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
-            $query = Location::with(['warehouse', 'parent'])
-                ->withSum(['stocks as delivered_stock_quantity' => function ($stockQuery) {
-                    $stockQuery->where('quantity', '>', 0);
-                }], 'quantity')
-                ->select('locations.*');
+            // Baca parameter delivery_status dari berbagai sumber
+            $deliveryStatus = $request->input('delivery_status') 
+                ?: $request->get('delivery_status') 
+                ?: $request->query('delivery_status');
+            
+            $warehouseId = $request->input('warehouse_id') 
+                ?: $request->get('warehouse_id') 
+                ?: $request->query('warehouse_id');
+            
+            // Debug logging
+            \Log::info('Location Filter Debug', [
+                'delivery_status' => $deliveryStatus,
+                'warehouse_id' => $warehouseId,
+                'all_params' => $request->all(),
+            ]);
+            
+            // Build query dengan filter
+            $query = Location::with(['warehouse', 'parent']);
 
             // Filter by warehouse if provided
-            if ($request->has('warehouse_id') && $request->warehouse_id) {
-                $query->where('warehouse_id', $request->warehouse_id);
+            if (!empty($warehouseId)) {
+                $query->where('warehouse_id', $warehouseId);
             }
 
             // Filter by delivery status if provided
-            if ($request->has('delivery_status') && $request->delivery_status) {
-                if ($request->delivery_status === 'delivered') {
+            if (!empty($deliveryStatus)) {
+                if ($deliveryStatus === 'delivered') {
+                    // Sudah Dikirim: lokasi yang memiliki stock dengan quantity > 0
                     $query->whereHas('stocks', function ($stockQuery) {
                         $stockQuery->where('quantity', '>', 0);
                     });
-                } elseif ($request->delivery_status === 'pending') {
+                } elseif ($deliveryStatus === 'pending') {
+                    // Belum Dikirim: lokasi yang tidak memiliki stock dengan quantity > 0
                     $query->whereDoesntHave('stocks', function ($stockQuery) {
                         $stockQuery->where('quantity', '>', 0);
                     });
                 }
             }
+
+            // Add delivered_stock_quantity menggunakan subquery (karena withSum tidak bekerja dengan whereHas)
+            $query->selectRaw('locations.*, 
+                COALESCE((
+                    SELECT SUM(quantity) 
+                    FROM stocks 
+                    WHERE stocks.location_id = locations.id 
+                    AND stocks.quantity > 0
+                ), 0) as delivered_stock_quantity');
 
             return DataTables::of($query)
                 ->addColumn('warehouse_name', function ($location) {

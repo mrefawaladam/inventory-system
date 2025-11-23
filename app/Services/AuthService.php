@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use App\Services\SecurityLogService;
 
 class AuthService
 {
@@ -16,11 +17,15 @@ class AuthService
         $user = User::where('email', $email)->first();
 
         if (!$user || !Hash::check($password, $user->password)) {
+            SecurityLogService::logFailedLogin($email, 'Invalid credentials');
             return [
                 'success' => false,
                 'message' => 'Invalid credentials',
             ];
         }
+
+        // Log successful login
+        SecurityLogService::logSuccessfulLogin();
 
         // Create token (using Sanctum or custom token)
         $token = $user->createToken('auth-token')->plainTextToken;
@@ -42,6 +47,7 @@ class AuthService
     public function logout($user): void
     {
         if ($user) {
+            SecurityLogService::logLogout();
             $user->tokens()->delete();
         }
     }

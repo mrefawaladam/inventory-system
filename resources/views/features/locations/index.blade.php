@@ -266,9 +266,22 @@ $(document).ready(function() {
         serverSide: true,
         ajax: {
             url: "{{ route('locations.index') }}",
+            type: 'GET',
             data: function(d) {
-                d.warehouse_id = $('#filter-warehouse').val();
-                d.delivery_status = $('#filter-delivery-status').val();
+                // Ambil nilai filter
+                var warehouseId = $('#filter-warehouse').val();
+                var deliveryStatus = $('#filter-delivery-status').val();
+                
+                // Set parameter ke object d
+                d.warehouse_id = warehouseId || '';
+                d.delivery_status = deliveryStatus || '';
+                
+                // Debug logging (hapus setelah fix)
+                console.log('DataTables AJAX Request:', {
+                    warehouse_id: d.warehouse_id,
+                    delivery_status: d.delivery_status,
+                    full_data: d
+                });
             },
             dataSrc: function(json) {
                 // Remove loading overlay when data is loaded

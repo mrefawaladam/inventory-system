@@ -14,6 +14,13 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'session.timeout' => \App\Http\Middleware\SessionTimeout::class,
+            'security.headers' => \App\Http\Middleware\SecurityHeaders::class,
+            'permission' => \App\Http\Middleware\CheckPermission::class,
+        ]);
+        
+        // Add security headers to all web requests
+        $middleware->web(append: [
+            \App\Http\Middleware\SecurityHeaders::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

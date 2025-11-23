@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Services\SecurityLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
@@ -54,6 +55,9 @@ class LoginController extends Controller
         $remember = $request->filled('remember');
 
         if (Auth::attempt($credentials, $remember)) {
+            // Log successful login
+            SecurityLogService::logSuccessfulLogin();
+            
             $request->session()->regenerate();
 
             // Clear throttle on successful login
@@ -62,6 +66,9 @@ class LoginController extends Controller
 
             return redirect()->intended(route('dashboard'));
         }
+
+        // Log failed login attempt
+        SecurityLogService::logFailedLogin($request->email, 'Invalid credentials');
 
         // Increment throttle on failed attempt
         $key = $this->throttleKey($request);
@@ -87,6 +94,9 @@ class LoginController extends Controller
      */
     public function logout(Request $request)
     {
+        // Log logout before logging out
+        SecurityLogService::logLogout();
+
         Auth::logout();
 
         $request->session()->invalidate();

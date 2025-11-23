@@ -65,18 +65,39 @@ class ItemService
     }
 
     /**
-     * Upload item image
+     * Upload item image with security checks
      */
     public function uploadImage(UploadedFile $file): string
     {
-        // Ensure items directory exists
-        $itemsDir = storage_path('app/public/items');
-        if (!file_exists($itemsDir)) {
-            mkdir($itemsDir, 0755, true);
+        // Security: Validate file type by MIME type, not just extension
+        $allowedMimes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
+        $mimeType = $file->getMimeType();
+        
+        if (!in_array($mimeType, $allowedMimes)) {
+            throw new \Exception('Invalid file type. Only JPEG, PNG, and GIF images are allowed.');
         }
 
-        // Generate unique filename
-        $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+        // Security: Validate file extension
+        $allowedExtensions = ['jpeg', 'jpg', 'png', 'gif'];
+        $extension = strtolower($file->getClientOriginalExtension());
+        
+        if (!in_array($extension, $allowedExtensions)) {
+            throw new \Exception('Invalid file extension.');
+        }
+
+        // Security: Check file size (max 2MB)
+        if ($file->getSize() > 2 * 1024 * 1024) {
+            throw new \Exception('File size exceeds maximum allowed size of 2MB.');
+        }
+
+        // Security: Generate safe filename (no user input)
+        $filename = time() . '_' . uniqid() . '_' . bin2hex(random_bytes(8)) . '.' . $extension;
+
+        // Ensure items directory exists with secure permissions
+        $itemsDir = storage_path('app/public/items');
+        if (!file_exists($itemsDir)) {
+            mkdir($itemsDir, 0750, true);
+        }
 
         // Store file using Storage facade on public disk
         // This will save to storage/app/public/items/filename.ext
@@ -85,6 +106,16 @@ class ItemService
         // Verify file was saved
         if (!Storage::disk('public')->exists($path)) {
             throw new \Exception('Failed to save image file.');
+        }
+
+        // Security: Verify the saved file is actually an image
+        $fullPath = Storage::disk('public')->path($path);
+        $imageInfo = @getimagesize($fullPath);
+        
+        if ($imageInfo === false) {
+            // Delete the file if it's not a valid image
+            Storage::disk('public')->delete($path);
+            throw new \Exception('Uploaded file is not a valid image.');
         }
 
         return $path;
