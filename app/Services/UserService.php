@@ -78,12 +78,7 @@ class UserService
             'password' => [
                 'required',
                 'confirmed',
-                Password::min(8)
-                    ->letters()
-                    ->mixedCase()
-                    ->numbers()
-                    ->symbols()
-                    ->uncompromised(),
+                Password::min(8),
             ],
             'roles' => 'nullable|array',
         ];
@@ -100,12 +95,7 @@ class UserService
             'password' => [
                 'nullable',
                 'confirmed',
-                Password::min(8)
-                    ->letters()
-                    ->mixedCase()
-                    ->numbers()
-                    ->symbols()
-                    ->uncompromised(),
+                Password::min(8),
             ],
             'roles' => 'nullable|array',
         ];

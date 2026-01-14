@@ -41,19 +41,23 @@
           </li>
           @endif
 
+          @if(!auth()->user()->hasRole('user'))
           <li class="sidebar-item">
             <a class="sidebar-link" href="{{ route('suppliers.index') }}">
               <iconify-icon icon="solar:shop-2-line-duotone"></iconify-icon>
               <span class="hide-menu">Kelola Supplier</span>
             </a>
           </li>
+          @endif
 
+          @if(!auth()->user()->hasRole('user'))
           <li class="sidebar-item">
             <a class="sidebar-link" href="{{ route('customers.index') }}">
               <iconify-icon icon="solar:users-group-rounded-line-duotone"></iconify-icon>
               <span class="hide-menu">Kelola Customer</span>
             </a>
           </li>
+          @endif
 
           <li class="sidebar-item">
             <a class="sidebar-link" href="{{ route('warehouses.index') }}">

@@ -51,7 +51,7 @@ class UserController extends Controller
      */
     public function create()
     {
-        $roles = Role::all();
+        $roles = Role::whereIn('name', ['superadmin', 'admin', 'user'])->get();
 
         return response()->json([
             'html' => view('features.users.partials.form', [
@@ -122,7 +122,7 @@ class UserController extends Controller
      */
     public function edit(User $user)
     {
-        $roles = Role::all();
+        $roles = Role::whereIn('name', ['superadmin', 'admin', 'user'])->get();
 
         return response()->json([
             'html' => view('features.users.partials.form', [
